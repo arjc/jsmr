@@ -1,7 +1,7 @@
 # SMR: Project Java Sheet Music Reader
 
 ![Alpha screenshot](https://github.com/arjc/smr/blob/main/public/ss1.png)
-current indev build screenshot 3rd Aug 26
+> current indev build screenshot 4th Aug 26
 
 ## Idea
 This java sheet music reader is a Image to music program which only uses vanila dependancies from the jdk pakages.
@@ -13,7 +13,7 @@ SMR use Swing to build an simple and user firendly UI.
 `swing.Box, swing.BoxLayout, swing.DefaultComboBoxModel, swing.JButton, swing.JComboBox, swing.JFileChooser, swing.JFrame, swing.JPanel, swing.SwingUtilities, swing.UIManager and swing.filechooser.FileNameExtensionFilter` are the dependancies imported from swing
 
 ![Outline of the final product](https://github.com/arjc/smr/blob/main/public/wire.png)
-final interface 
+> Final interface 
 
 # Sheet music image to expression
 #### We first recive the image and store it as binary and convert it to monochromatic and represent it using a bitmap to perform calculations and determine symbols.
