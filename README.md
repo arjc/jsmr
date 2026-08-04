@@ -10,7 +10,7 @@ data structure as a binary bitmap.
 
 ### User Interface
 SMR use Swing to build an simple and user firendly UI.
-`swing.Box, javax.swing.BoxLayout, javax.swing.DefaultComboBoxModel, javax.swing.JButton, javax.swing.JComboBox, javax.swing.JFileChooser, javax.swing.JFrame, javax.swing.JPanel, javax.swing.SwingUtilities, javax.swing.UIManager and javax.swing.filechooser.FileNameExtensionFilter` are the dependancies imported from swing
+`swing.Box, swing.BoxLayout, swing.DefaultComboBoxModel, swing.JButton, swing.JComboBox, swing.JFileChooser, swing.JFrame, swing.JPanel, swing.SwingUtilities, swing.UIManager and swing.filechooser.FileNameExtensionFilter` are the dependancies imported from swing
 
 ![Outline of the final product](https://github.com/arjc/smr/blob/main/public/wire.png)
 final interface outline

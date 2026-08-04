@@ -17,7 +17,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class main {
+public class Main {
     private final JFrame frame;
     private final JButton importButton;
     private final JButton playPianoButton;
@@ -28,11 +28,11 @@ public class main {
     private final MusicPanel musicPanel;
     private BufferedImage currentImage;
 
-    public main() {
+    public Main() {
         frame = new JFrame("Project Sheet Music Reader");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(980, 720);
-        frame.setMinimumSize(new Dimension(900, 650));
+        frame.setSize(670, 400);
+        frame.setMinimumSize(new Dimension(670, 400));
         frame.setLocationRelativeTo(null);
         JPanel root = new JPanel(new BorderLayout(0, 12));
         JPanel center = new JPanel();
@@ -65,19 +65,19 @@ public class main {
         center.add(content, BorderLayout.CENTER);
         root.add(center, BorderLayout.CENTER);
         frame.setContentPane(root);
-        importButton.addActionListener(event -> openImage());
-        playPianoButton.addActionListener(event -> startPlayback("Grand Piano"));
-        playStringsButton.addActionListener(event -> startPlayback("Strings"));
-        stopButton.addActionListener(event -> stopPlayback());
-        clefCombo.addActionListener(event -> { musicPanel.setClef((String) clefCombo.getSelectedItem()); });
-        timeSignatureCombo.addActionListener(event -> { musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem()); });
+        importButton.addActionListener(e -> openImage());
+        playPianoButton.addActionListener(e -> startPlayback("Grand Piano"));
+        playStringsButton.addActionListener(e -> startPlayback("Strings"));
+        stopButton.addActionListener(e -> stopPlayback());
+        clefCombo.addActionListener(e -> { musicPanel.setClef((String) clefCombo.getSelectedItem()); });
+        timeSignatureCombo.addActionListener(e -> { musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem()); });
         musicPanel.setClef((String) clefCombo.getSelectedItem());
         musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
     }
 
     private void openImage() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Select a sheet music image");
+        chooser.setDialogTitle("Select a sheet music staff image to read...");
         chooser.setFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
         int result = chooser.showOpenDialog(frame);
         if (result == JFileChooser.APPROVE_OPTION) {
@@ -97,7 +97,7 @@ public class main {
         SwingUtilities.invokeLater(() -> {
             try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());} 
             catch (Exception ignored) {}
-            new main().show();
+            new Main().show();
         });
     }
 
