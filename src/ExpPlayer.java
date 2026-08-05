@@ -3,11 +3,7 @@ import javax.sound.midi.*;
 
 public class ExpPlayer {
     public static class Note {
-        int off;
-        int octave;
-        int dur;
-        int mod;
-        int vel;
+        int off, octave, dur, mod, vel;
         public Note(int off, int mod, int octave, int dur, int vel) {
             this.off = off;
             this.mod = mod;

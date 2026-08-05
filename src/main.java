@@ -92,7 +92,10 @@ public class Main {
         new Thread(() -> {
             try {
                 System.out.println("Playing Sheet Music...");
+                
                 ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
+
+
                 meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
 
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
