@@ -1,31 +1,20 @@
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
 import javax.imageio.ImageIO;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-    private final JFrame frame;
-    private final JButton importButton;
-    private final JButton playPianoButton;
-    private final JButton playStringsButton;
-    private final JButton stopButton;
-    private final JComboBox<String> clefCombo;
-    private final JComboBox<String> timeSignatureCombo;
-    private final MusicPanel musicPanel;
+    private JFrame frame;
+    private JButton importButton;
+    private JButton playPianoButton;
+    private JButton playStringsButton;
+    private JButton stopButton;
+    private JComboBox<String> clefCombo;
+    private JComboBox<String> timeSignatureCombo;
+    private MusicPanel musicPanel;
     private BufferedImage currentImage;
 
     public Main() {
@@ -41,9 +30,9 @@ public class Main {
         topControls.setLayout(new BoxLayout(topControls, BoxLayout.X_AXIS));
         importButton = new JButton("+ Import");
         playPianoButton = new JButton("Play Piano");
-        playStringsButton = new JButton("Play Strings");
+        playStringsButton = new JButton("Play Guitar");
         stopButton = new JButton("Stop");
-        clefCombo = new JComboBox<>(new DefaultComboBoxModel<>(new String[] { "𝄞 Treble Clef", "𝄢 Bass Clef"}));
+        clefCombo = new JComboBox<>(new DefaultComboBoxModel<>(new String[] { "𝄞 Treble Clef", "𝄢 Bass Clef" }));
         timeSignatureCombo = new JComboBox<>(new DefaultComboBoxModel<>(new String[] { "TS 4/4", "TS 3/4", "TS 2/4", "TS 6/8", "TS 12/8" }));
         topControls.add(importButton);
         topControls.add(Box.createHorizontalStrut(12));
@@ -66,11 +55,15 @@ public class Main {
         root.add(center, BorderLayout.CENTER);
         frame.setContentPane(root);
         importButton.addActionListener(e -> openImage());
-        playPianoButton.addActionListener(e -> startPlayback("Grand Piano"));
-        playStringsButton.addActionListener(e -> startPlayback("Strings"));
+        playPianoButton.addActionListener(e -> startPlayback(1));
+        playStringsButton.addActionListener(e -> startPlayback(27));
         stopButton.addActionListener(e -> stopPlayback());
-        clefCombo.addActionListener(e -> { musicPanel.setClef((String) clefCombo.getSelectedItem()); });
-        timeSignatureCombo.addActionListener(e -> { musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem()); });
+        clefCombo.addActionListener(e -> {
+            musicPanel.setClef((String) clefCombo.getSelectedItem());
+        });
+        timeSignatureCombo.addActionListener(e -> {
+            musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
+        });
         musicPanel.setClef((String) clefCombo.getSelectedItem());
         musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
     }
@@ -82,21 +75,59 @@ public class Main {
         int result = chooser.showOpenDialog(frame);
         if (result == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
-            try { currentImage = ImageIO.read(file); musicPanel.setImage(currentImage); }
-            catch (IOException exception) {}
+            try {
+                currentImage = ImageIO.read(file);
+                musicPanel.setImage(currentImage);
+            } catch (IOException exception) {
+            }
         }
     }
 
-    private void startPlayback(String instrument) { if (currentImage == null) return; }
+    private void startPlayback(int instrument) {
+        if (currentImage == null) {
+            System.out.println("\nPlease import an image of the sheet music using the import button before you play...");
+            return;
+        }
+        // ========================================================================================================
+        new Thread(() -> {
+            try {
+                System.out.println("Playing Sheet Music...");
+                ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
+                meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
 
-    private void stopPlayback() {}
-    
-    private void show() { frame.setVisible(true); }
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(7, 0, 4, 8, 100));
+                meashureArray.add(new ExpPlayer.Note(0, 0, 4, 6, 100));
+                meashureArray.add(new ExpPlayer.Note(2, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
+                ExpPlayer.playMeashure(meashureArray, instrument);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }, "Playback-Thread").start();
+    }
+
+    private void stopPlayback() {
+
+    }
+
+    private void show() {
+        frame.setVisible(true);
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());} 
-            catch (Exception ignored) {}
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+            }
             new Main().show();
         });
     }
@@ -106,7 +137,8 @@ public class Main {
         private String clef = "Treble Clef";
         private String timeSignature = "TS 4/4";
 
-        private MusicPanel() {}
+        private MusicPanel() {
+        }
 
         private void setImage(BufferedImage image) {
             this.image = image;
@@ -132,7 +164,8 @@ public class Main {
                 int inset = 18;
                 int availableWidth = width - inset * 2;
                 int availableHeight = height - inset * 2;
-                double scale = Math.min((double) availableWidth / image.getWidth(), (double) availableHeight / image.getHeight());
+                double scale = Math.min((double) availableWidth / image.getWidth(),
+                        (double) availableHeight / image.getHeight());
                 int drawWidth = (int) Math.round(image.getWidth() * scale);
                 int drawHeight = (int) Math.round(image.getHeight() * scale);
                 int x = (width - drawWidth) / 2;
