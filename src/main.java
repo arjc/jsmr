@@ -7,95 +7,93 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-    private JFrame frame;
-    private JButton importButton;
-    private JButton playPianoButton;
-    private JButton playStringsButton;
-    private JButton stopButton;
+    private JFrame fr;
+    private JButton importBtn;
+    private JButton playPriBtn;
+    private JButton playSecBtn;
+    private JButton stopBtn;
     private JComboBox<String> clefCombo;
     private JComboBox<String> timeSignatureCombo;
-    private MusicPanel musicPanel;
-    private BufferedImage currentImage;
+    private CtrlPanel controlPanel;
+    private BufferedImage importedSheetImg;
 
     public Main() {
-        frame = new JFrame("Project Sheet Music Reader");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(670, 400);
-        frame.setMinimumSize(new Dimension(670, 400));
-        frame.setLocationRelativeTo(null);
+        fr = new JFrame("Project Sheet Music Reader");
+        fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        fr.setSize(670, 400);
+        fr.setMinimumSize(new Dimension(670, 400));
+        fr.setLocationRelativeTo(null);
         JPanel root = new JPanel(new BorderLayout(0, 12));
         JPanel center = new JPanel();
         center.setLayout(new BorderLayout(0, 12));
         JPanel topControls = new JPanel();
         topControls.setLayout(new BoxLayout(topControls, BoxLayout.X_AXIS));
-        importButton = new JButton("+ Import");
-        playPianoButton = new JButton("Play Piano");
-        playStringsButton = new JButton("Play Guitar");
-        stopButton = new JButton("Stop");
+        importBtn = new JButton("+ Import");
+        playPriBtn = new JButton("Play Piano");
+        playSecBtn = new JButton("Play Guitar");
+        stopBtn = new JButton("Stop");
         clefCombo = new JComboBox<>(new DefaultComboBoxModel<>(new String[] { "𝄞 Treble Clef", "𝄢 Bass Clef" }));
         timeSignatureCombo = new JComboBox<>(new DefaultComboBoxModel<>(new String[] { "TS 4/4", "TS 3/4", "TS 2/4", "TS 6/8", "TS 12/8" }));
-        topControls.add(importButton);
+        topControls.add(importBtn);
         topControls.add(Box.createHorizontalStrut(12));
         topControls.add(clefCombo);
         topControls.add(Box.createHorizontalStrut(10));
         topControls.add(timeSignatureCombo);
         topControls.add(Box.createHorizontalStrut(10));
-        topControls.add(playPianoButton);
+        topControls.add(playPriBtn);
         topControls.add(Box.createHorizontalStrut(10));
-        topControls.add(playStringsButton);
+        topControls.add(playSecBtn);
         topControls.add(Box.createHorizontalStrut(10));
-        topControls.add(stopButton);
-        musicPanel = new MusicPanel();
-        musicPanel.setPreferredSize(new Dimension(860, 260));
+        topControls.add(stopBtn);
+        controlPanel = new CtrlPanel();
+        controlPanel.setPreferredSize(new Dimension(860, 260));
         JPanel content = new JPanel();
         content.setLayout(new BorderLayout(0, 12));
         content.add(topControls, BorderLayout.NORTH);
-        content.add(musicPanel, BorderLayout.CENTER);
+        content.add(controlPanel, BorderLayout.CENTER);
         center.add(content, BorderLayout.CENTER);
         root.add(center, BorderLayout.CENTER);
-        frame.setContentPane(root);
-        importButton.addActionListener(e -> openImage());
-        playPianoButton.addActionListener(e -> startPlayback(1));
-        playStringsButton.addActionListener(e -> startPlayback(27));
-        stopButton.addActionListener(e -> stopPlayback());
+        fr.setContentPane(root);
+        importBtn.addActionListener(e -> openImage());
+        playPriBtn.addActionListener(e -> startPlayback(1));
+        playSecBtn.addActionListener(e -> startPlayback(27));
+        stopBtn.addActionListener(e -> stopPlayback());
         clefCombo.addActionListener(e -> {
-            musicPanel.setClef((String) clefCombo.getSelectedItem());
+            controlPanel.setClef((String) clefCombo.getSelectedItem());
         });
         timeSignatureCombo.addActionListener(e -> {
-            musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
+            controlPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
         });
-        musicPanel.setClef((String) clefCombo.getSelectedItem());
-        musicPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
+        controlPanel.setClef((String) clefCombo.getSelectedItem());
+        controlPanel.setTimeSignature((String) timeSignatureCombo.getSelectedItem());
     }
 
     private void openImage() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select a sheet music staff image to read...");
         chooser.setFileFilter(new FileNameExtensionFilter("Image files", ImageIO.getReaderFileSuffixes()));
-        int result = chooser.showOpenDialog(frame);
+        int result = chooser.showOpenDialog(fr);
         if (result == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             try {
-                currentImage = ImageIO.read(file);
-                musicPanel.setImage(currentImage);
+                importedSheetImg = ImageIO.read(file);
+                controlPanel.setImage(StaffExpressionGenerator.getBwImg(importedSheetImg));
+                StaffExpressionGenerator.generate(importedSheetImg);
             } catch (IOException exception) {
+                System.out.println("\nPlease select a valid Staff image...");
             }
         }
     }
 
     private void startPlayback(int instrument) {
-        if (currentImage == null) {
+        if (importedSheetImg == null) {
             System.out.println("\nPlease import an image of the sheet music using the import button before you play...");
             return;
         }
-        // ========================================================================================================
         new Thread(() -> {
             try {
-                System.out.println("Playing Sheet Music...");
-                
+                System.out.println("\nPlaying Sheet Music...");
                 ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
-
-
                 meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
 
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
@@ -122,7 +120,7 @@ public class Main {
     }
 
     private void show() {
-        frame.setVisible(true);
+        fr.setVisible(true);
     }
 
     public static void main(String[] args) {
@@ -135,12 +133,12 @@ public class Main {
         });
     }
 
-    private static final class MusicPanel extends JPanel {
+    private static final class CtrlPanel extends JPanel {
         private BufferedImage image;
         private String clef = "Treble Clef";
         private String timeSignature = "TS 4/4";
 
-        private MusicPanel() {
+        private CtrlPanel() {
         }
 
         private void setImage(BufferedImage image) {
