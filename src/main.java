@@ -77,8 +77,8 @@ public class Main {
             File file = chooser.getSelectedFile();
             try {
                 importedSheetImg = ImageIO.read(file);
-                controlPanel.setImage(StaffExpressionGenerator.getBwImg(importedSheetImg));
-                StaffExpressionGenerator.generate(importedSheetImg);
+                BufferedImage processed = StaffExpressionGenerator.generate(importedSheetImg);
+                controlPanel.setImage(processed);
             } catch (IOException exception) {
                 System.out.println("\nPlease select a valid Staff image...");
             }
@@ -95,6 +95,17 @@ public class Main {
                 System.out.println("\nPlaying Sheet Music...");
                 ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
                 meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
+                
+                meashureArray.add(new ExpPlayer.Note(0, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(2, 0, 4,16, 100));
+                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(5, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(7, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(9, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(11, 0, 4, 16, 100));
+                meashureArray.add(new ExpPlayer.Note(0, 0, 5, 2, 100));
+
+                meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
 
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
@@ -109,9 +120,7 @@ public class Main {
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
                 ExpPlayer.playMeashure(meashureArray, instrument);
 
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            } catch (Exception ex) { ex.printStackTrace(); }
         }, "Playback-Thread").start();
     }
 
@@ -125,7 +134,7 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try {
+            try { 
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception ignored) {
             }

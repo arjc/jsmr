@@ -20,6 +20,7 @@ public class ExpPlayer {
         channel.programChange(instrument);
         for (Note n : noteArr) {
             channel.noteOn(n.off + 12 * (n.octave + 1) + n.mod, n.vel);
+            
             Thread.sleep(2000 / n.dur);
             channel.noteOff(n.off + 12 * (n.octave + 1) + n.mod);
         }
@@ -38,9 +39,6 @@ public class ExpPlayer {
     //     // ArrayList<Note> meashureArray = new ArrayList<>();
     //     // meashureArray.add(new Note(1, 0, 4, 2, 0 ));
 
-    //     // meashureArray.add(new Note(4, 0, 4, 8, 100));
-    //     // meashureArray.add(new Note(4, 0, 4, 8, 100));
-    //     // meashureArray.add(new Note(4, 0, 4, 4, 100));
     //     // Thread.sleep(250);
 
     //     // meashureArray.add(new Note(4, 0, 4, 8, 100));
