@@ -14,6 +14,7 @@ public class ExpPlayer {
             this.dur = dur; this.vel = vel;
         }
     }
+
     
     public static void playMeashure(ArrayList<Note> noteArr, int instrument) throws Exception {
         Synthesizer synth = MidiSystem.getSynthesizer();
@@ -26,11 +27,15 @@ public class ExpPlayer {
             Thread.sleep(2000 / n.dur);
             channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
         }
+        System.out.println("\nEnd of sheet music.");
         Thread.sleep(5000);
         channel.allNotesOff();
         synth.close();
     }
+
+
 }
+
 
 // public static void main(String[] args) throws Exception {
     

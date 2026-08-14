@@ -6,7 +6,16 @@ public class StaffExpressionGenerator {
 
     int[] gClef = {4, 5, 7, 9, 11, 0, 2, 4}, gClefLeg = {7, 9, 11, 0, 2};
     int[] fClef = {7, 9, 11, 0, 2, 4, 5, 7}, fClefLeg = {11, 0, 2, 4, 5};
+
+
     static class Cluster {
+
+        // All clusters is enclosed in a rectangle have a starting coordinate x and y, 
+        // The cluster enclosing rectangle is then drawn 
+        // by extending the height and width h, w respectively
+
+        // nBlack is the total black pixels inside the cluster 
+        // used for claculating density of the cluster
         int x, y, w, h, nBlack;
         private Cluster(int x, int y, int w, int h, int nBlack) {
             this.x = x;
@@ -16,11 +25,8 @@ public class StaffExpressionGenerator {
             this.nBlack = nBlack;
         }
     }
-
-    class rowCluster {
-        
-    }
-
+    
+    // === Global public methods ===
     public static BufferedImage getBwImg(BufferedImage i) {
         BufferedImage binImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
         Graphics2D g = binImg.createGraphics();
@@ -30,6 +36,9 @@ public class StaffExpressionGenerator {
     }
 
     private static void getFiveLinesYCoords(BufferedImage i, ArrayList<Integer> arr) {
+        // Keep in mind thses are not objects, just plain integers.
+        // Specifically looks for staffLines by making sure the following are implemented:
+        // 1) width > the total width of the img
         int w = i.getWidth(), h = i.getHeight(), temp = 0;
         for (int y = 0; y < h; y++) {
             int nBlack = 0;
@@ -38,25 +47,8 @@ public class StaffExpressionGenerator {
         }
     }
     
-    private static void scanForAllXBetween(BufferedImage i, int minY, int maxY, ArrayList<Cluster> gapClustures) {
-        int w = i.getWidth();
-        for (int y = minY; y <= maxY; y++) {
-            System.out.println("Scan for at y =" + y);
-            int nBlack = 0, curClusterWidth, startX, endX;
-            for (int x = 0; x < w; x++) {
-                if ((i.getRGB(x, y) & 0xFFFFFF) == 0x000000) {
-                    System.out.println("Cluster found at x = " + x + "y = " + y);
-                    startX = x;
-                    if ((i.getRGB(x + 1, y) & 0xFFFFFF) != 0x000000) {
-                        System.out.println("Cluster finished at x = " + x + "y = " + y);
-                        endX = x;
-                        gapClustures.add(new Cluster(startX, y, endX - startX, 1, nBlack));
-                    } 
-                    nBlack++;
-                }
-            } 
-            if (nBlack >= w / 2) System.out.println("Staff Line");
-        }
+    private static void enboxClusters(BufferedImage i, ArrayList<Cluster> arr) {
+
     }
 
     public static BufferedImage generate(BufferedImage img) {
@@ -76,6 +68,8 @@ public class StaffExpressionGenerator {
         
         // meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
         // Height of all note heads = 1 gap height.
+        // This is an Optimised version of the mean formula. 
+        // Derived by Alwin Rajesh
         int meanHeadHeight = (stLineYIndices.get(4) - stLineYIndices.get(0)) / 5;
         int barLineHeight = stLineYIndices.get(0) * 5;
         
@@ -83,15 +77,10 @@ public class StaffExpressionGenerator {
         System.out.println(meanHeadHeight);
         System.out.println(barLineHeight);
 
-        ArrayList<Cluster> gapAClusters = new ArrayList<>();
-        scanForAllXBetween(iBin, stLineYIndices.get(0), stLineYIndices.get(1), gapAClusters);
-
-        System.out.println("all on gap cluster " + gapAClusters.size());
-
         // Graphics2D gr = iBin.createGraphics();
         // gr.setColor(Color.RED);
         // gr.setStroke(new BasicStroke(2));
-
+        
         // int topY = Math.max(0, stLineYIndices.get(0) - meanHeadHeight);
         // int boxHeight = barHeight + meanHeadHeight * 2;
 
@@ -102,8 +91,28 @@ public class StaffExpressionGenerator {
         // }
 
         // gr.dispose();
-
+        
         return iBin;
     }
 
 }
+// private static void scanForAllXBetween(BufferedImage i, int minY, int maxY, ArrayList<Cluster> gapClustures) {
+//     int w = i.getWidth();
+//     for (int y = minY; y <= maxY; y++) {
+//         System.out.println("Scan for at y =" + y);
+//         int nBlack = 0, curClusterWidth, startX, endX;
+//         for (int x = 0; x < w; x++) {
+//             if ((i.getRGB(x, y) & 0xFFFFFF) == 0x000000) {
+//                 System.out.println("Cluster found at x = " + x + "y = " + y);
+//                 startX = x;
+//                 if ((i.getRGB(x + 1, y) & 0xFFFFFF) != 0x000000) {
+//                     System.out.println("Cluster finished at x = " + x + "y = " + y);
+//                     endX = x;
+//                     gapClustures.add(new Cluster(startX, y, endX - startX, 1, nBlack));
+//                 } 
+//                 nBlack++;
+//             }
+//         } 
+//         if (nBlack >= w / 2) System.out.println("Staff Line");
+//     }
+// }
