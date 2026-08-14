@@ -11,7 +11,8 @@ By Arjun M Liji
 
 This java sheet music reader is a Image to music program which only uses vanila dependancies built into jdk.
 
-It works by taking in a raster image of a sheet music (single staff only) and then processing it further to be mapped to a binary bitmap. A horizontal scan is performed to do this and it uses Multithreading to make the scan faster.
+It works by taking in a raster image of a sheet music (single staff only) and then processing it further to be mapped to a binary monochrome image. A cluster allocation algo is performed to find the note heads and we use bfs to look for symbols around the head, for instance, a stem could be found to the right or to the left of a note head.
+wild symbols use use a template recognition algorithm to identify matching patterns.
 
 # Features
 
@@ -62,7 +63,7 @@ g.dispose();
 # MIDI Expression player
 
 ## ExpPlayer class
-###off: note offset for c major notes from C to B
+### off: note offset for c major notes from C to B
 ```
 C = 0
 D = 2
@@ -73,6 +74,9 @@ A = 9
 B = 11
 ```
 ### oct: octave of the note
+Octave range from 0 to 8
+treble clef from: G3-D6 with ledger and E4-F5 without ledger
+
 ### dur: inverse of duration of the note
 full note = 1
 half note = 2 ie., 1/2
@@ -87,5 +91,9 @@ Mainly used to represent a timed rests when `vel = 0`
 
 ## Play function
 
+initialise and import `Midisystem`
+`.getSynthesizer()` is used to initialise a synth object
+`.programChange()[instrumentIndex]` instrument index corresponds to a specific instrument available with 
+For each note in the note array we use `chanel.noteOn()`
 
 
