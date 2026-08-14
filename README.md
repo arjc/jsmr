@@ -1,4 +1,7 @@
-# SMR: Project Java Sheet Music Reader
+# JSMR
+## AKA Project Java Sheet Music Reader
+
+By Arjun M Liji
 
 ![Alpha screenshot](https://github.com/arjc/smr/blob/main/public/ss1.png)
 

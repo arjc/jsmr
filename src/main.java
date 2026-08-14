@@ -16,6 +16,7 @@ public class Main {
     private JComboBox<String> timeSignatureCombo;
     private CtrlPanel controlPanel;
     private BufferedImage importedSheetImg;
+    private Thread playTrd;
 
     public Main() {
         fr = new JFrame("Project Sheet Music Reader");
@@ -90,23 +91,12 @@ public class Main {
             System.out.println("\nPlease import an image of the sheet music using the import button before you play...");
             return;
         }
-        new Thread(() -> {
+        playTrd = new Thread(() -> {
             try {
                 System.out.println("\nPlaying Sheet Music...");
                 ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
                 meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
                 
-                meashureArray.add(new ExpPlayer.Note(0, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(2, 0, 4,16, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(5, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(7, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(9, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(11, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(0, 0, 5, 2, 100));
-
-                meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
-
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
@@ -119,12 +109,16 @@ public class Main {
                 meashureArray.add(new ExpPlayer.Note(2, 0, 4, 16, 100));
                 meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
                 ExpPlayer.playMeashure(meashureArray, instrument);
+            } catch (Exception e) { System.out.println("\nMusic Halted by the user..."); }
+        }, "Playback-Thread");
 
-            } catch (Exception ex) { ex.printStackTrace(); }
-        }, "Playback-Thread").start();
+        playTrd.start();
     }
 
     private void stopPlayback() {
+        if (playTrd != null) {
+            playTrd.interrupt();
+        }
 
     }
 
@@ -136,8 +130,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             try { 
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             new Main().show();
         });
     }
@@ -146,7 +139,7 @@ public class Main {
         private BufferedImage image;
         private String clef = "Treble Clef";
         private String timeSignature = "TS 4/4";
-
+        
         private CtrlPanel() {
         }
 
@@ -154,7 +147,7 @@ public class Main {
             this.image = image;
             repaint();
         }
-
+        
         private void setClef(String clef) {
             this.clef = clef;
             repaint();
@@ -164,7 +157,7 @@ public class Main {
             this.timeSignature = timeSignature;
             repaint();
         }
-
+        
         @Override
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
@@ -175,7 +168,7 @@ public class Main {
                 int availableWidth = width - inset * 2;
                 int availableHeight = height - inset * 2;
                 double scale = Math.min((double) availableWidth / image.getWidth(),
-                        (double) availableHeight / image.getHeight());
+                (double) availableHeight / image.getHeight());
                 int drawWidth = (int) Math.round(image.getWidth() * scale);
                 int drawHeight = (int) Math.round(image.getHeight() * scale);
                 int x = (width - drawWidth) / 2;
