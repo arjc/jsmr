@@ -57,3 +57,35 @@ g.drawImage(image, 0, 0, null);
 g.dispose();
 
 ```
+
+
+# MIDI Expression player
+
+## ExpPlayer class
+###off: note offset for c major notes from C to B
+```
+C = 0
+D = 2
+E = 4
+F = 5
+G = 7
+A = 9
+B = 11
+```
+### oct: octave of the note
+### dur: inverse of duration of the note
+full note = 1
+half note = 2 ie., 1/2
+quater note = 4 ie., 1/4
+### mod: note tone modification 
+Sharp # = 1
+flat b = -1
+natural H = 0
+### vel: velocity of the note
+Mainly used to represent a timed rests when `vel = 0`
+`vel = 100` used for all notes for all octaves by default.
+
+## Play function
+
+
+
