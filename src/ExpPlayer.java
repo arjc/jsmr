@@ -8,9 +8,9 @@ public class ExpPlayer {
         int off, oct, dur, mod, vel;
         public Note(int off, int mod, int oct, int dur, int vel) {
             this.off = off; this.mod = mod; this.oct = oct; 
-            // (0,  0, 3, dur, vel) [C♮3 or A3] 
-            // (0,  1, 3, dur, vel) C#3 
-            // (0, -1, 3, dur, vel) Cb3 
+            // (0,  0, 3, dur, vel) [CN3 or C3] 
+            // (0,  1, 3, dur, vel) [C#3 or Db3]
+            // (0, -1, 3, dur, vel) [Cb3 or B2]
             this.dur = dur; this.vel = vel;
         }
     }
