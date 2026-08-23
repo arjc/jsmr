@@ -1,87 +1,75 @@
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class StaffExpressionGenerator {
+    
+class MusicSheet {
 
     int[] gClef = {4, 5, 7, 9, 11, 0, 2, 4}, gClefLeg = {7, 9, 11, 0, 2};
     int[] fClef = {7, 9, 11, 0, 2, 4, 5, 7}, fClefLeg = {11, 0, 2, 4, 5};
-
-
-    static class Cluster {
-
+    int x, y, h, w;
+    int clef, ts;
+    int nBlack;
+    int getConc() { return this.nBlack / (this.w * this.h); }
+    
+    class Cluster extends MusicSheet{
         // All clusters is enclosed in a rectangle have a starting coordinate x and y, 
         // The cluster enclosing rectangle is then drawn 
         // by extending the height and width h, w respectively
-
         // nBlack is the total black pixels inside the cluster 
         // used for claculating density of the cluster
-        int x, y, w, h, nBlack;
-        private Cluster(int x, int y, int w, int h, int nBlack) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-            this.nBlack = nBlack;
+        Cluster(int x, int y, int w, int h, int nBlack) {
+            this.x = x; this.y = y; this.w = w; this.h = h; this.nBlack = nBlack;
         }
     }
-    
-    // === Global public methods ===
+
+
     public static BufferedImage getBwImg(BufferedImage i) {
         BufferedImage binImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
         Graphics2D g = binImg.createGraphics();
-        g.drawImage(i, 0, 0, null);
-        g.dispose();
+        g.drawImage(i, 0, 0, null); g.dispose();
         return binImg;
     }
-
-    private static void getFiveLinesYCoords(BufferedImage i, ArrayList<Integer> arr) {
+    
+    private static void getStaffLinesCoords(BufferedImage i, ArrayList<Integer> arr) {
+        // The positional average indeces are appended to an integer arrayList
         // Keep in mind thses are not objects, just plain integers.
         // Specifically looks for staffLines by making sure the following are implemented:
         // 1) width > the total width of the img
-        int w = i.getWidth(), h = i.getHeight(), temp = 0;
+        int w = i.getWidth(), h = i.getHeight(), tem = 0;
+        int[] pixels = i.getRGB(0, 0, w, h, null, 0, w);
         for (int y = 0; y < h; y++) {
-            int nBlack = 0;
-            for (int x = 0; x < w; x++) if ((i.getRGB(x, y) & 0xFFFFFF) == 0x000000) nBlack++;
-            if (nBlack >= w / 2) { if (arr.isEmpty() || temp + 1 != y) arr.add(y); temp = y; }
+            long nBlack = Arrays.stream(pixels, y * w, (y + 1) * w).filter(rgb -> (rgb & 0xFFFFFF) == 0).count();
+            if (nBlack >= w / 2) { if (arr.isEmpty() || tem + 1 != y) arr.add(y); tem = y; }
         }
     }
     
-    private static void enboxClusters(BufferedImage i, ArrayList<Cluster> arr) {
-
-    }
-
+    
     public static BufferedImage generate(BufferedImage img) {
 
-        ArrayList<ExpPlayer.Note> noteArr = new ArrayList<>();
+        int imgW = img.getWidth(), imgH = img.getHeight();
+        System.out.println("\nImage recived: " + imgW + "x" + imgH);
 
-
-        int w = img.getWidth(), h = img.getHeight();
-        System.out.println("\nImage recived: " + w + "x" + h);
-
-        ArrayList<Integer> stLineYIndices = new ArrayList<>();
+        ArrayList<Integer> staffLineIndexes = new ArrayList<>();
         
-        BufferedImage iBin = getBwImg(img);
-        getFiveLinesYCoords(iBin, stLineYIndices);
+        BufferedImage iBin = MusicSheet.getBwImg(img);
+        MusicSheet.getStaffLinesCoords(iBin, staffLineIndexes);
         
-        if (stLineYIndices.size() < 5) return iBin;
+        if (staffLineIndexes.size() <= 5) return iBin;
         
         // meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
         // Height of all note heads = 1 gap height.
         // This is an Optimised version of the mean formula. 
         // Derived by Alwin Rajesh
-        int meanHeadHeight = (stLineYIndices.get(4) - stLineYIndices.get(0)) / 5;
-        int barLineHeight = stLineYIndices.get(0) * 5;
-        
-        System.out.println(stLineYIndices);
-        System.out.println(meanHeadHeight);
-        System.out.println(barLineHeight);
+        int meanHeadHeight = (staffLineIndexes.get(4) - staffLineIndexes.get(0)) / 5;
+        int barLineHeight = staffLineIndexes.get(0) * 5;
 
         // Graphics2D gr = iBin.createGraphics();
         // gr.setColor(Color.RED);
         // gr.setStroke(new BasicStroke(2));
         
-        // int topY = Math.max(0, stLineYIndices.get(0) - meanHeadHeight);
+        // int topY = Math.max(0, staffLineIndexes.get(0) - meanHeadHeight);
         // int boxHeight = barHeight + meanHeadHeight * 2;
 
         // for (int x : barLineXIndices) {
@@ -94,8 +82,29 @@ public class StaffExpressionGenerator {
         
         return iBin;
     }
-
+    
 }
+    
+
+    
+    // === Global pre public methods ===
+
+
+    // private static ArrayList<Cluster> performBFS(BufferedImage i, int xi, int yi){
+        
+    //     ArrayList<int[]> q = new ArrayList<>();
+    //     ArrayList<int[]> inCluster = new ArrayList<>();
+    //     q.add(new int[]{xi, yi});
+    //     int x = 0, y = 0;
+    //     do {
+    //         if ((i.getRGB(x + 1, y) & 0xFFFFFF) == 0) q.add(new int[]{x + 1, y});
+    //         if ((i.getRGB(x, y + 1) & 0xFFFFFF) == 0) q.add(new int[]{x, y + 1});
+    //         if ((i.getRGB(x - 1, y) & 0xFFFFFF) == 0) q.add(new int[]{x - 1, y});
+    //         if ((i.getRGB(x, y - 1) & 0xFFFFFF) == 0) q.add(new int[]{x, y - 1});
+    //     } while (!q.isEmpty());
+        
+    // }
+
 // private static void scanForAllXBetween(BufferedImage i, int minY, int maxY, ArrayList<Cluster> gapClustures) {
 //     int w = i.getWidth();
 //     for (int y = minY; y <= maxY; y++) {

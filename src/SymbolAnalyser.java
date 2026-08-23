@@ -4,7 +4,7 @@ public class SymbolAnalyser {
 
 
 
-    public static void analyse(BufferedImage i, StaffExpressionGenerator.Cluster cl) {
+    public static void analyse(BufferedImage i, MusicSheet.Cluster cl) {
 
 
     }

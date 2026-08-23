@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import javax.sound.midi.*;
 
-public class ExpPlayer {
+public class Expression {
     
     
     public static class Note {
@@ -16,7 +16,7 @@ public class ExpPlayer {
     }
 
     
-    public static void playMeashure(ArrayList<Note> noteArr, int instrument) throws Exception {
+    public static void play(ArrayList<Note> noteArr, int instrument) throws Exception {
         Synthesizer synth = MidiSystem.getSynthesizer();
         synth.open();
         MidiChannel channel = synth.getChannels()[0];
@@ -61,7 +61,7 @@ public class ExpPlayer {
     
     //     // meashureArray.add(new Note(4, 0, 4, 8, 100));
     
-    //     // playMeashure(meashureArray, 25);
+    //     // play(meashureArray, 25);
     
     //     // meashureArray.add(new Note(5, 0, 5, 2));
     //     // meashureArray.add(new Note(7, 0, 5, 4));

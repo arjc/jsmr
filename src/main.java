@@ -78,7 +78,7 @@ public class Main {
             File file = chooser.getSelectedFile();
             try {
                 importedSheetImg = ImageIO.read(file);
-                BufferedImage processed = StaffExpressionGenerator.generate(importedSheetImg);
+                BufferedImage processed = MusicSheet.generate(importedSheetImg);
                 controlPanel.setImage(processed);
             } catch (IOException exception) {
                 System.out.println("\nPlease select a valid Staff image...");
@@ -94,21 +94,21 @@ public class Main {
         playTrd = new Thread(() -> {
             try {
                 System.out.println("\nPlaying Sheet Music...");
-                ArrayList<ExpPlayer.Note> meashureArray = new ArrayList<>();
-                meashureArray.add(new ExpPlayer.Note(1, 0, 4, 4, 0));
+                ArrayList<Expression.Note> curExpArray = new ArrayList<>();
+                curExpArray.add(new Expression.Note(1, 0, 4, 4, 0));
                 
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(7, 0, 4, 8, 100));
-                meashureArray.add(new ExpPlayer.Note(0, 0, 4, 6, 100));
-                meashureArray.add(new ExpPlayer.Note(2, 0, 4, 16, 100));
-                meashureArray.add(new ExpPlayer.Note(4, 0, 4, 4, 100));
-                ExpPlayer.playMeashure(meashureArray, instrument);
+                curExpArray.add(new Expression.Note(4, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 4, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 4, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(7, 0, 4, 8, 100));
+                curExpArray.add(new Expression.Note(0, 0, 4, 6, 100));
+                curExpArray.add(new Expression.Note(2, 0, 4, 16, 100));
+                curExpArray.add(new Expression.Note(4, 0, 4, 4, 100));
+                Expression.play(curExpArray, instrument);
             } catch (Exception e) { System.out.println("\nMusic Halted by the user..."); }
         }, "Playback-Thread");
 
