@@ -12,25 +12,32 @@ public class Expression {
             // (0,  1, 3, dur, vel) [C#3 or Db3]
             // (0, -1, 3, dur, vel) [Cb3 or B2]
             this.dur = dur; this.vel = vel;
+            // (0,  0, 0, dur, 000) [Rest representation]
+            // vel = 100 is used with all notes and vel = 0 is taken as rests
         }
     }
 
     
-    public static void play(ArrayList<Note> noteArr, int instrument) throws Exception {
-        Synthesizer synth = MidiSystem.getSynthesizer();
-        synth.open();
-        MidiChannel channel = synth.getChannels()[0];
-        channel.programChange(instrument);
-        for (Note n : noteArr) {
-            channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
-            
-            Thread.sleep(2000 / n.dur);
-            channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
+    
+    public static void play(ArrayList<Note> noteArr, int instrument) {
+        try {
+            Synthesizer synth = MidiSystem.getSynthesizer();
+            synth.open();
+            MidiChannel channel = synth.getChannels()[0];
+            channel.programChange(instrument);
+            for (Note n : noteArr) {
+                channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
+
+                Thread.sleep(2000 / n.dur);
+                channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
+            }
+            System.out.println("\nEnd of sheet music.");
+            Thread.sleep(5000);
+            channel.allNotesOff();
+            synth.close();
+        } catch (Exception e) {
+            System.out.println("\nSheet music player is halted.");
         }
-        System.out.println("\nEnd of sheet music.");
-        Thread.sleep(5000);
-        channel.allNotesOff();
-        synth.close();
     }
 
 

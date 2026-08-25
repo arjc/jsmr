@@ -15,7 +15,7 @@ public class Main {
     private JComboBox<String> clefCombo;
     private JComboBox<String> timeSignatureCombo;
     private CtrlPanel controlPanel;
-    private BufferedImage importedSheetImg;
+    private BufferedImage sheetImg;
     private Thread playTrd;
 
     public Main() {
@@ -77,8 +77,8 @@ public class Main {
         if (result == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             try {
-                importedSheetImg = ImageIO.read(file);
-                BufferedImage processed = MusicSheet.generate(importedSheetImg);
+                sheetImg = ImageIO.read(file);
+                BufferedImage processed = MusicSheet.generate(sheetImg);
                 controlPanel.setImage(processed);
             } catch (IOException exception) {
                 System.out.println("\nPlease select a valid Staff image...");
@@ -87,7 +87,7 @@ public class Main {
     }
 
     private void startPlayback(int instrument) {
-        if (importedSheetImg == null) {
+        if (sheetImg == null) {
             System.out.println("\nPlease import an image of the sheet music using the import button before you play...");
             return;
         }
