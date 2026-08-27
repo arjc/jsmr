@@ -89,7 +89,7 @@ public class MusicSheet {
 
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
-                if (visited[y][x] || !isClusterPixel(i, x, y)) continue; 
+                if (visited[y][x] || !isClrPx(i, x, y)) continue; 
                 ArrayList<int[]> q = new ArrayList<>(); q.add(new int[]{x, y}); visited[y][x] = true;
                 int head = 0, minClrX = x, maxClrX = x, minClrY = y, maxClrY = y;
                 while (head < q.size()) {
@@ -101,7 +101,7 @@ public class MusicSheet {
                     for (int[] pt : nearbyPx) {
                         int nx = pt[0], ny = pt[1];
                         if (nx >= minX && nx < maxX && ny >= minY && ny < maxY && !visited[ny][nx] 
-                        && isClusterPixel(i, nx, ny)) { visited[ny][nx] = true; q.add(new int[]{nx, ny}); }
+                        && isClrPx(i, nx, ny)) { visited[ny][nx] = true; q.add(new int[]{nx, ny}); }
                     }
                 }
                 this.allClusters.add(new Cluster(minClrX, minClrY, maxClrX - minClrX + 1, maxClrY - minClrY + 1, q.size()));
@@ -109,7 +109,7 @@ public class MusicSheet {
         }
     }
 
-    private boolean isClusterPixel(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
+    private boolean isClrPx(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
 
     private BufferedImage enboxCluster(BufferedImage i) {
         BufferedImage markedImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_INT_RGB);

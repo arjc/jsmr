@@ -2,8 +2,6 @@ import java.util.ArrayList;
 import javax.sound.midi.*;
 
 public class Expression {
-    
-    
     public static class Note {
         int off, oct, dur, mod, vel;
         public Note(int off, int mod, int oct, int dur, int vel) {
@@ -16,9 +14,6 @@ public class Expression {
             // vel = 100 is used with all notes and vel = 0 is taken as rests
         }
     }
-
-    
-    
     public static void play(ArrayList<Note> noteArr, int instrument) {
         try {
             Synthesizer synth = MidiSystem.getSynthesizer();
@@ -27,7 +22,6 @@ public class Expression {
             channel.programChange(instrument);
             for (Note n : noteArr) {
                 channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
-
                 Thread.sleep(2000 / n.dur);
                 channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
             }
@@ -36,7 +30,7 @@ public class Expression {
             channel.allNotesOff();
             synth.close();
         } catch (Exception e) {
-            System.out.println("\nSheet music player is halted.");
+            System.out.println("\nSheet music player is halted. Err: " + e);
         }
     }
 
