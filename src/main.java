@@ -73,7 +73,8 @@ public class Main {
     private void show() { fr.setVisible(true); }
 
     public static void main(String[] args) { SwingUtilities.invokeLater(() -> {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {} 
+        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } 
+        catch (Exception ignored) {} 
         new Main().show();
     }); }
 
@@ -91,8 +92,7 @@ public class Main {
                 int w = getWidth(), h = getHeight(), inset = 18, wAvl = w - inset * 2, hAvl = h - inset * 2;
                 double scale = Math.min((double) wAvl / i.getWidth(), (double) hAvl / i.getHeight());
                 int drawWidth = (int) Math.round(i.getWidth() * scale), drawHeight = (int) Math.round(i.getHeight() * scale);
-                int x = (w - drawWidth) / 2, y = (h - drawHeight) / 2;
-                graphics.drawImage(i, x, y, drawWidth, drawHeight, null);
+                int x = (w - drawWidth) / 2, y = (h - drawHeight) / 2; graphics.drawImage(i, x, y, drawWidth, drawHeight, null);
             }
         }
     }
