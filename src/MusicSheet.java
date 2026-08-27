@@ -1,17 +1,22 @@
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
     
-class MusicSheet {
+public class MusicSheet {
 
     int[] gClef = {4, 5, 7, 9, 11, 0, 2, 4}, gClefLeg = {7, 9, 11, 0, 2};
     int[] fClef = {7, 9, 11, 0, 2, 4, 5, 7}, fClefLeg = {11, 0, 2, 4, 5};
-    int x, y, h, w, clef, ts, nBlack;
+    int x, y, h, w, clef, ts, nBars;
+    ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>();
+    ArrayList<Integer> igX = new ArrayList<>(), igY = new ArrayList<>();
+    ArrayList<Cluster> allClusters = new ArrayList<>();
     
-    public MusicSheet(int x, int y, int w, int h){
-        this.x = x; this.y = y; this.w = w; this.h = h;
-    }
+    // public MusicSheet(int x, int y, int w, int h){
+    //     this.x = x; this.y = y; this.w = w; this.h = h; 
+    // }
     
     class Cluster {
         int x, y, h, w, clef, ts, nBlack;
@@ -28,16 +33,13 @@ class MusicSheet {
         private int getConc() { return this.nBlack / (this.w * this.h); }
     }
 
-
     public static BufferedImage getBwImg(BufferedImage i) {
         BufferedImage binImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
-        Graphics2D g = binImg.createGraphics();
-        g.drawImage(i, 0, 0, null); g.dispose();
-        return binImg;
+        Graphics2D g = binImg.createGraphics(); g.drawImage(i, 0, 0, null); g.dispose(); return binImg;
     }
     
-    private static void getSheetLinesCoords(BufferedImage i, ArrayList<Integer> yStaffArr, ArrayList<Integer> xBarArr, int avSLWidth, int avBLWidth) {
-        int w = i.getWidth(), h = i.getHeight(), temp = 0, sum = 0;
+    private void getSheetLinesCoords(BufferedImage i) {
+        int w = i.getWidth(), h = i.getHeight(), temp = 0;
         /*
             The positional first incance of pixel column or row of 
             the staff lines (and bar lines) index are appended to an integer arrayList
@@ -54,64 +56,90 @@ class MusicSheet {
             the staff lines or barlines to making it possible for range calulation like this note is between
             staffArr[1] and staffArr[0], with treble clef that note should be a E4 note...
             *-*-*-*-*
-            avBLWidth and avSLWidth are the average line thickenss of a bar line and staffline rspectively 
+            igX and igY are all the pixels occupied by the line thickenss of a barline and staffline rspectively.
+            These rows and columns are to be avoided by the cluster identifier algo because BFS can go ahead and 
+            give out humungusly huge cluster widths- as it recognises the staffLine as a whole cluster.
+            This can also be a problem when there are notes on the staff lines and leger lines, 
+            read the comment attached to the cluster scaning method for more info...
         */
         for (int y = 0; y < h; y++) {
             int nYPx = 0; for (int x = 0; x < w; x++) if (i.getRGB(x, y) != -1) nYPx++;
-            if (nYPx >= w * 0.3) { if (y != temp + 1) yStaffArr.add(y); else avSLWidth++; temp = y; }
-            sum += avSLWidth; avSLWidth = 0;
+            if (nYPx >= w * 0.3) { this.igY.add(y); if (y != temp + 1) this.staffYIdx.add(y); temp = y; }
         } 
-        avSLWidth  = sum / yStaffArr.size();
         temp = 0;
-        // yStaffArr.add(38); yStaffArr.add(49); yStaffArr.add(61); yStaffArr.add(73); yStaffArr.add(85);
-        if (yStaffArr.size() < 5) System.out.println("5 StaffLines not found");
+        // this.staffYIdx.add(38); this.staffYIdx.add(49); this.staffYIdx.add(61); this.staffYIdx.add(73); this.staffYIdx.add(85);
+        if (this.staffYIdx.size() < 5) System.out.println("5 StaffLines not found");
         else {
-            System.out.println("\nStaff Lines: " + yStaffArr + " for " + avSLWidth + " Staff Line thickness");
+            System.out.println("\nStaff Lines: " + this.staffYIdx + " for " + this.igY);
             for (int x = 0; x < w; x++) {
                 Boolean isContBarLine = true;
-                for (int y = yStaffArr.get(0); y <= yStaffArr.get(4); y++) 
+                for (int y = this.staffYIdx.get(0); y <= this.staffYIdx.get(4); y++) 
                     if (i.getRGB(x, y) == -1) { isContBarLine = false; break; }
-                if (isContBarLine) { if (x != temp + 1) xBarArr.add(x); else avBLWidth++; temp = x; }
-                sum += avBLWidth; avBLWidth = 0;
+                if (isContBarLine) { this.igX.add(x); if (x != temp + 1) this.barXIdx.add(x); temp = x; }
             }
-            System.out.println("Bar Lines: " + xBarArr + " for " + avBLWidth + " Bar Line thickness");
+            System.out.println("Bar Lines: " + this.barXIdx + " from " + this.igX);
         } 
     }
 
+    public void getClusters(BufferedImage i) {
+        int imgW = i.getWidth(), imgH = i.getHeight();
+        int minX = Math.max(0, this.x), minY = Math.max(0, this.y);
+        int maxX = Math.min(imgW, this.x + this.w), maxY = Math.min(imgH, this.y + this.h);
+        boolean[][] visited = new boolean[imgH][imgW]; this.allClusters.clear();
 
-    public void getClusters(BufferedImage i, ArrayList<Integer> barLines, ArrayList<Cluster> sheetClusters){
-        for (int y = this.y; y < this.y + this.h; y++) {
-            for (int x = this.x; x < this.x - this.w; x++) {
-                i.getRGB(x, y);
-
+        for (int y = minY; y < maxY; y++) {
+            for (int x = minX; x < maxX; x++) {
+                if (visited[y][x] || !isClusterPixel(i, x, y)) continue; 
+                ArrayList<int[]> q = new ArrayList<>(); q.add(new int[]{x, y}); visited[y][x] = true;
+                int head = 0, minClrX = x, maxClrX = x, minClrY = y, maxClrY = y;
+                while (head < q.size()) {
+                    int[] point = q.get(head++);
+                    int px = point[0], py = point[1];
+                    minClrX = Math.min(minClrX, px); maxClrX = Math.max(maxClrX, px); 
+                    minClrY = Math.min(minClrY, py); maxClrY = Math.max(maxClrY, py);
+                    int[][] nearbyPx = { {px - 1, py}, {px + 1, py}, {px, py - 1}, {px, py + 1} };
+                    for (int[] pt : nearbyPx) {
+                        int nx = pt[0], ny = pt[1];
+                        if (nx >= minX && nx < maxX && ny >= minY && ny < maxY && !visited[ny][nx] 
+                        && isClusterPixel(i, nx, ny)) { visited[ny][nx] = true; q.add(new int[]{nx, ny}); }
+                    }
+                }
+                this.allClusters.add(new Cluster(minClrX, minClrY, maxClrX - minClrX + 1, maxClrY - minClrY + 1, q.size()));
             }
         }
     }
 
-    
+    private boolean isClusterPixel(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
+
+    private BufferedImage enboxCluster(BufferedImage i) {
+        BufferedImage markedImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = markedImg.createGraphics(); g.drawImage(i, 0, 0, null);
+        g.setColor(Color.RED); g.setStroke(new BasicStroke(2));
+        for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
+        g.dispose(); return markedImg;
+    }
+
     public static BufferedImage generate(BufferedImage img) {
 
         int imgW = img.getWidth(), imgH = img.getHeight();
         System.out.println("\nImage recived: " + imgW + "x" + imgH);
+        
+        BufferedImage iBin = MusicSheet.getBwImg(img); // BW of img
+        
+        MusicSheet currMeashure = new MusicSheet();
 
-        ArrayList<Integer> staffLineIndexes = new ArrayList<>(); // all y position of staff lines
-        ArrayList<Integer> barLineIndexes = new ArrayList<>(); // all x position of bar lines
-        int yTol = 0, xTol = 0; // Tolerances or how much thickness each line shall have
+        currMeashure.getSheetLinesCoords(iBin);
 
-        ArrayList<Cluster> allClusters = new ArrayList<>();
+        if (currMeashure.staffYIdx.size() < 5 || currMeashure.barXIdx.size() < 2) return iBin;
 
-        // New image iBin stores the black and white image of img
-        BufferedImage iBin = MusicSheet.getBwImg(img);
-        MusicSheet.getSheetLinesCoords(iBin, staffLineIndexes, barLineIndexes, yTol, xTol);
-
-        MusicSheet currMeasure = new MusicSheet(
-            barLineIndexes.get(0), 
-            staffLineIndexes.get(0), 
-            barLineIndexes.get(4) - barLineIndexes.get(0), 
-            Math.abs(staffLineIndexes.get(4) - staffLineIndexes.get(0))
-        );
-
-        currMeasure.getClusters(iBin, barLineIndexes, allClusters);
+        currMeashure.nBars = currMeashure.barXIdx.size();
+        currMeashure.x = currMeashure.barXIdx.get(0);
+        int staffTop = currMeashure.staffYIdx.get(0), staffBottom = currMeashure.staffYIdx.get(4);
+        int staffSpacing = Math.max(1, (staffBottom - staffTop) / 4), YMargin = staffSpacing * 3;
+        currMeashure.y = Math.max(0, staffTop - YMargin);
+        currMeashure.w = currMeashure.barXIdx.get(currMeashure.nBars -1) - currMeashure.x;
+        currMeashure.h = Math.min(imgH - currMeashure.y, staffBottom - staffTop + YMargin * 2 + 1);
+        currMeashure.getClusters(iBin);
 
         /*
             meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
@@ -119,14 +147,14 @@ class MusicSheet {
             This is an Optimised version of the mean formula. 
             Derived by Alwin Rajesh (https://github.com/aalwinrajesh001-a11y)
         */        
-        // int meanHeadHeight = (staffLineIndexes.get(4) - staffLineIndexes.get(0)) / 5;
-        // int barLineHeight = staffLineIndexes.get(0) - staffLineIndexes.get(4);
+        // int meanHeadHeight = (staffXIdx.get(4) - staffXIdx.get(0)) / 5;
+        // int barLineHeight = staffXIdx.get(0) - staffXIdx.get(4);
 
         // Graphics2D gr = iBin.createGraphics();
         // gr.setColor(Color.RED);
         // gr.setStroke(new BasicStroke(2));
         
-        // int topY = Math.max(0, staffLineIndexes.get(0) - meanHeadHeight);
+        // int topY = Math.max(0, staffXIdx.get(0) - meanHeadHeight);
         // int boxHeight = barHeight + meanHeadHeight * 2;
 
         // for (int x : barLineXIndices) {
@@ -137,7 +165,7 @@ class MusicSheet {
 
         // gr.dispose();
         
-        return iBin;
+        return currMeashure.enboxCluster(iBin);
     }
     
 }
