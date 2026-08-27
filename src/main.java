@@ -11,7 +11,7 @@ public class Main {
         fr = new JFrame("Project Sheet Music Reader");
         fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         fr.setSize(670, 400); fr.setMinimumSize(new Dimension(670, 400)); fr.setLocationRelativeTo(null);
-        JPanel root = new JPanel(new BorderLayout(0, 12)), center = new JPanel(), ctrls = new JPanel();;
+        JPanel root = new JPanel(new BorderLayout(0, 12)), center = new JPanel(), ctrls = new JPanel();
         center.setLayout(new BorderLayout(0, 12));
         // JPanel ctrls = new JPanel();
         ctrls.setLayout(new BoxLayout(ctrls, BoxLayout.X_AXIS));
