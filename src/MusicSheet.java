@@ -3,6 +3,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Comparator;
 
     
 public class MusicSheet {
@@ -13,13 +14,14 @@ public class MusicSheet {
     ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>();
     ArrayList<Integer> igX = new ArrayList<>(), igY = new ArrayList<>();
     ArrayList<Cluster> allClusters = new ArrayList<>();
+    ArrayList<Cluster> headClusters = new ArrayList<>();
     
     // public MusicSheet(int x, int y, int w, int h){
     //     this.x = x; this.y = y; this.w = w; this.h = h; 
     // }
     
     class Cluster {
-        int x, y, h, w, clef, ts, nBlack;
+        int x, y, h, w, clef, ts, nBlack, nextClusterX;
         /*
         All clusters is enclosed in a rectangle have a starting coordinate x and y, 
         The cluster enclosing rectangle is then drawn 
@@ -46,8 +48,8 @@ public class MusicSheet {
             Keep in mind thses are not objects, just plain integers
             representing the row/ column index of the image buffer.
             Specifically looks for staffLines by making sure the following are implemented:
-            1) width > the total width of the img
-            2) the line is continous
+            (i) width > the total width of the img
+            (ii) the line is continous
             Same for barlines exept the barLine is exactly total y height of the staff.
             *-*-*-*-*
             Array can have a max of 5 staff line indexes.
@@ -89,7 +91,7 @@ public class MusicSheet {
 
         for (int y = minY; y < maxY; y++) {
             for (int x = minX; x < maxX; x++) {
-                if (visited[y][x] || !isClrPx(i, x, y)) continue; 
+                if (visited[y][x] || !isInCluster(i, x, y)) continue; 
                 ArrayList<int[]> q = new ArrayList<>(); q.add(new int[]{x, y}); visited[y][x] = true;
                 int head = 0, minClrX = x, maxClrX = x, minClrY = y, maxClrY = y;
                 while (head < q.size()) {
@@ -100,8 +102,8 @@ public class MusicSheet {
                     int[][] nearbyPx = { {px - 1, py}, {px + 1, py}, {px, py - 1}, {px, py + 1} };
                     for (int[] pt : nearbyPx) {
                         int nx = pt[0], ny = pt[1];
-                        if (nx >= minX && nx < maxX && ny >= minY && ny < maxY && !visited[ny][nx] 
-                        && isClrPx(i, nx, ny)) { visited[ny][nx] = true; q.add(new int[]{nx, ny}); }
+                        if (nx >= minX && nx < maxX && ny >= minY && ny < maxY && !visited[ny][nx] && isInCluster(i, nx, ny)) 
+                            { visited[ny][nx] = true; q.add(new int[]{nx, ny}); }
                     }
                 }
                 this.allClusters.add(new Cluster(minClrX, minClrY, maxClrX - minClrX + 1, maxClrY - minClrY + 1, q.size()));
@@ -109,17 +111,40 @@ public class MusicSheet {
         }
     }
 
-    private boolean isClrPx(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
+    public void filterHeads(ArrayList<Expression.Note> notesArr){
+        int headH = this.staffYIdx.get(3) - this.staffYIdx.get(2);
+        double headW = headH * 1.5;
+        this.allClusters.sort(Comparator.comparingInt(n -> n.x));
+        for (Cluster c : this.allClusters) if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) this.headClusters.add(c);
+        for (int i = 1; i < this.headClusters.size() - 1; i++) {
+            if (this.headClusters.get(i - 1).x == this.headClusters.get(i).x) {
+                this.headClusters.remove(i);
+                System.out.println(i);
+            } else {
+                this.headClusters.get(i - 1).nextClusterX = this.headClusters.get(i).x;
+            }
+        }
+        for (Cluster c : this.headClusters) {
+            int dur = (c.getConc() > 0.5) ? 4 : 2; 
+            int note = 5;
+            notesArr.add(new Expression.Note(note, 0, 3, dur, 100));
+
+        }
+    }
+
+    private boolean isInCluster(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
 
     private BufferedImage enboxCluster(BufferedImage i) {
         BufferedImage markedImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = markedImg.createGraphics(); g.drawImage(i, 0, 0, null);
-        g.setColor(Color.RED); g.setStroke(new BasicStroke(2));
-        for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
+        g.setColor(Color.RED); g.setStroke(new BasicStroke(1));
+        // for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
+        g.setColor(Color.GREEN);
+        for (Cluster cluster : this.headClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         g.dispose(); return markedImg;
     }
 
-    public static BufferedImage generate(BufferedImage img) {
+    public static BufferedImage generate(BufferedImage img, ArrayList<Expression.Note> notesArr) {
 
         int imgW = img.getWidth(), imgH = img.getHeight();
         System.out.println("\nImage recived: " + imgW + "x" + imgH);
@@ -140,6 +165,7 @@ public class MusicSheet {
         currMeashure.w = currMeashure.barXIdx.get(currMeashure.nBars -1) - currMeashure.x;
         currMeashure.h = Math.min(imgH - currMeashure.y, staffBottom - staffTop + YMargin * 2 + 1);
         currMeashure.getClusters(iBin);
+        currMeashure.filterHeads(notesArr);
 
         /*
             meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
