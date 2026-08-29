@@ -16,8 +16,8 @@ public class Main {
         ctrls.add(Box.createHorizontalStrut(10)); ctrls.add(haltBtn); cPnl = new CtrlPanel(); cPnl.setPreferredSize(new Dimension(860, 260));
         JPanel ctx = new JPanel(); ctx.setLayout(new BorderLayout(0, 12)); ctx.add(ctrls, BorderLayout.NORTH);                                 // CTX
         ctx.add(cPnl, BorderLayout.CENTER); center.add(ctx, BorderLayout.CENTER); root.add(center, BorderLayout.CENTER); fr.setContentPane(root);         // LAYOUT
-        impBtn.addActionListener(e -> getImgChooser()); haltBtn.addActionListener(e -> haltSheet());                                                       // IMP / STOP
-        play1Btn.addActionListener(e -> playSheet(1)); play2Btn.addActionListener(e -> playSheet(27));                     // PLAY 
+        impBtn.addActionListener(e -> getImgChooser()); haltBtn.addActionListener(e -> haltSheet());                                                      // IMP / STOP
+        play1Btn.addActionListener(e -> playSheet(1)); play2Btn.addActionListener(e -> playSheet(27));                             // PLAY 
         clefSelect.addActionListener(e -> { cPnl.setClef((String) clefSelect.getSelectedItem()); }); cPnl.setClef((String) clefSelect.getSelectedItem()); // CLEF
         tsSelect.addActionListener(e -> { cPnl.setTs((String) tsSelect.getSelectedItem()); }); cPnl.setTs((String) tsSelect.getSelectedItem());           // TS
     } private void getImgChooser() {

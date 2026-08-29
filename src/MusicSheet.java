@@ -11,16 +11,10 @@ public class MusicSheet {
     int[] gClef = {4, 5, 7, 9, 11, 0, 2, 4}, gClefLeg = {7, 9, 11, 0, 2};
     int[] fClef = {7, 9, 11, 0, 2, 4, 5, 7}, fClefLeg = {11, 0, 2, 4, 5};
     int x, y, h, w, clef, ts, nBars;
-    ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>();
-    ArrayList<Integer> igX = new ArrayList<>(), igY = new ArrayList<>();
-    ArrayList<Cluster> allClusters = new ArrayList<>();
-    ArrayList<Cluster> headClusters = new ArrayList<>();
+    ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>(), igX = new ArrayList<>(), igY = new ArrayList<>();
+    ArrayList<Cluster> allClusters = new ArrayList<>(), headClusters = new ArrayList<>();
     
-    // public MusicSheet(int x, int y, int w, int h){
-    //     this.x = x; this.y = y; this.w = w; this.h = h; 
-    // }
-    
-    class Cluster {
+    public static class Cluster {
         int x, y, h, w, clef, ts, nBlack, nextClusterX;
         /*
         All clusters is enclosed in a rectangle have a starting coordinate x and y, 
@@ -32,7 +26,18 @@ public class MusicSheet {
        Cluster(int x, int y, int w, int h, int nBlack) {
            this.x = x; this.y = y; this.w = w; this.h = h; this.nBlack = nBlack;
         }
-        private int getConc() { return this.nBlack / (this.w * this.h); }
+        // private int getConc() { return this.nBlack / (this.w * this.h); }
+    }
+    
+    public class Meashure {
+        int x, y, w, h; ArrayList<Cluster> allNoteHeads = new ArrayList<>();
+        private int getNumberOfNotes() { return this.allNoteHeads.size(); }
+        // private ArrayList<int[]> getNoteDiff() {
+        //     for (Cluster c : this.allNoteHeads) {
+        //         return new ArrayList<>();
+        //     }
+        // }
+
     }
 
     public static BufferedImage getBwImg(BufferedImage i) {
@@ -125,7 +130,7 @@ public class MusicSheet {
             }
         }
         for (Cluster c : this.headClusters) {
-            int dur = (c.getConc() > 0.5) ? 4 : 2; 
+            int dur = (c.nextClusterX > 40) ? 4 : 2; 
             int note = 5;
             notesArr.add(new Expression.Note(note, 0, 3, dur, 100));
 
@@ -151,21 +156,21 @@ public class MusicSheet {
         
         BufferedImage iBin = MusicSheet.getBwImg(img); // BW of img
         
-        MusicSheet currMeashure = new MusicSheet();
+        MusicSheet sheet = new MusicSheet();
 
-        currMeashure.getSheetLinesCoords(iBin);
+        sheet.getSheetLinesCoords(iBin);
 
-        if (currMeashure.staffYIdx.size() < 5 || currMeashure.barXIdx.size() < 2) return iBin;
+        if (sheet.staffYIdx.size() < 5 || sheet.barXIdx.size() < 2) return iBin;
 
-        currMeashure.nBars = currMeashure.barXIdx.size();
-        currMeashure.x = currMeashure.barXIdx.get(0);
-        int staffTop = currMeashure.staffYIdx.get(0), staffBottom = currMeashure.staffYIdx.get(4);
+        sheet.nBars = sheet.barXIdx.size();
+        sheet.x = sheet.barXIdx.get(0);
+        int staffTop = sheet.staffYIdx.get(0), staffBottom = sheet.staffYIdx.get(4);
         int staffSpacing = Math.max(1, (staffBottom - staffTop) / 4), YMargin = staffSpacing * 3;
-        currMeashure.y = Math.max(0, staffTop - YMargin);
-        currMeashure.w = currMeashure.barXIdx.get(currMeashure.nBars -1) - currMeashure.x;
-        currMeashure.h = Math.min(imgH - currMeashure.y, staffBottom - staffTop + YMargin * 2 + 1);
-        currMeashure.getClusters(iBin);
-        currMeashure.filterHeads(notesArr);
+        sheet.y = Math.max(0, staffTop - YMargin);
+        sheet.w = sheet.barXIdx.get(sheet.nBars -1) - sheet.x;
+        sheet.h = Math.min(imgH - sheet.y, staffBottom - staffTop + YMargin * 2 + 1);
+        sheet.getClusters(iBin);
+        sheet.filterHeads(notesArr);
 
         /*
             meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
@@ -191,7 +196,7 @@ public class MusicSheet {
 
         // gr.dispose();
         
-        return currMeashure.enboxCluster(iBin);
+        return sheet.enboxCluster(iBin);
     }
     
 }
