@@ -8,14 +8,18 @@ import java.util.Comparator;
     
 public class MusicSheet {
 
-    int[] gClef = {4, 5, 7, 9, 11, 0, 2, 4}, gClefLeg = {7, 9, 11, 0, 2};
-    int[] fClef = {7, 9, 11, 0, 2, 4, 5, 7}, fClefLeg = {11, 0, 2, 4, 5};
-    int x, y, h, w, clef, ts, nBars;
+    int[] gClef = {4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
+    int[] fClef = {7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 11};
+    int x, y, h, w, nBars; 
+    int[] cNotes, cNoteOct, ts;
+
     ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>(), igX = new ArrayList<>(), igY = new ArrayList<>();
     ArrayList<Cluster> allClusters = new ArrayList<>(), headClusters = new ArrayList<>();
     
     public static class Cluster {
-        int x, y, h, w, clef, ts, nBlack, nextClusterX;
+        int x, y, h, w, nBlack;
+        Cluster nextC;
+        boolean onLine;
         /*
         All clusters is enclosed in a rectangle have a starting coordinate x and y, 
         The cluster enclosing rectangle is then drawn 
@@ -31,7 +35,7 @@ public class MusicSheet {
     
     public class Meashure {
         int x, y, w, h; ArrayList<Cluster> allNoteHeads = new ArrayList<>();
-        private int getNumberOfNotes() { return this.allNoteHeads.size(); }
+        // private int getNumberOfNotes() { return this.allNoteHeads.size(); }
         // private ArrayList<int[]> getNoteDiff() {
         //     for (Cluster c : this.allNoteHeads) {
         //         return new ArrayList<>();
@@ -39,6 +43,14 @@ public class MusicSheet {
         // }
 
     }
+
+    // public class NoteHead {
+    //     int noteIdx; // 0 from bottom till 8 for F
+    //     private Expression.Note returnNote() {
+    //         return new Expression.Note();
+    //     }
+
+    // }
 
     public static BufferedImage getBwImg(BufferedImage i) {
         BufferedImage binImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
@@ -70,7 +82,10 @@ public class MusicSheet {
             read the comment attached to the cluster scaning method for more info...
         */
         for (int y = 0; y < h; y++) {
-            int nYPx = 0; for (int x = 0; x < w; x++) if (i.getRGB(x, y) != -1) nYPx++;
+            int nYPx = 0; 
+            for (int x = 0; x < w; x++) 
+                if (i.getRGB(x, y) != -1) 
+                    nYPx++;
             if (nYPx >= w * 0.3) { this.igY.add(y); if (y != temp + 1) this.staffYIdx.add(y); temp = y; }
         } 
         temp = 0;
@@ -120,24 +135,78 @@ public class MusicSheet {
         int headH = this.staffYIdx.get(3) - this.staffYIdx.get(2);
         double headW = headH * 1.5;
         this.allClusters.sort(Comparator.comparingInt(n -> n.x));
-        for (Cluster c : this.allClusters) if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) this.headClusters.add(c);
-        for (int i = 1; i < this.headClusters.size() - 1; i++) {
-            if (this.headClusters.get(i - 1).x == this.headClusters.get(i).x) {
-                this.headClusters.remove(i);
-                System.out.println(i);
-            } else {
-                this.headClusters.get(i - 1).nextClusterX = this.headClusters.get(i).x;
-            }
+        this.headClusters.clear();
+
+        for (Cluster c : this.allClusters) 
+            if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) this.headClusters.add(c);
+
+        for (int i = 1; i < this.headClusters.size();) {
+            Cluster c = this.headClusters.get(i - 1), n = this.headClusters.get(i);
+            boolean onLineHead = c.x <= n.x + n.w && n.x <= c.x + c.w;
+            if (onLineHead && c.y != n.y) {
+                Cluster abvLn = (c.y < n.y) ? c : n, blwLn = (abvLn == c) ? n : c;
+                abvLn.onLine = true;
+                this.headClusters.remove(blwLn);
+                if (blwLn == c && i > 1) i--;
+            } else i++;
+            // Cluster n = this.headClusters.get(i);
+            // if (n.x <= c.x + c.w) {
+            //     // this.headClusters.remove((c.y < n.y) ? n : c);
+            //     n.onLine = true;
+            //     if (c.y < n.y) {
+            //         this.headClusters.remove(n);
+            //     } else {
+            //         this.headClusters.remove(c);
+            //     }
+            // } if (c.x <= n.x + n.w) {
+            //     c.onLine = true;
+            // }
+            // c.onLine = false;
+            // if (c.nextC == null) continue;
+            // if (c.nextC.x <= (c.x + c.w)) {
+            //     c.onLine = true;
+            //     if (c.y < c.nextC.y) this.headClusters.remove(c.nextC);
+            //     if (c.y > c.nextC.y) this.headClusters.remove(c);
+            // }
         }
-        for (Cluster c : this.headClusters) {
-            int dur = (c.nextClusterX > 40) ? 4 : 2; 
-            int note = 5;
-            notesArr.add(new Expression.Note(note, 0, 3, dur, 100));
+        for (Cluster c : headClusters) {
+            int dur = 4;
+            // if (c.onLine) {
+            //     noteIndex = (c.y <= staffYIdx.get(0)) ? 6 :
+            //                 (c.y <= staffYIdx.get(1)) ? 4 :
+            //                 (c.y <= staffYIdx.get(2)) ? 2 :
+            //                 (c.y <= staffYIdx.get(3)) ? 0 : 8;
+            // } else {
+            //     noteIndex = (c.y <= staffYIdx.get(0)) ? 7 :
+            //                 (c.y <= staffYIdx.get(1)) ? 5 :
+            //                 (c.y <= staffYIdx.get(2)) ? 3 :
+            //                 (c.y <= staffYIdx.get(3)) ? 1 : 0;
+            //             }
+                        
+            // int note = cNotes[noteIndex];
+            int cNotePosIdx = (c.onLine) ?
+                c.y <= staffYIdx.get(0) ? 6 :
+                c.y <= staffYIdx.get(1) ? 4 :
+                c.y <= staffYIdx.get(2) ? 2 :
+                c.y <= staffYIdx.get(3) ? 0 : 8
+            :
+                c.y <= staffYIdx.get(0) ? 7 :
+                c.y <= staffYIdx.get(1) ? 5 :
+                c.y <= staffYIdx.get(2) ? 3 :
+                c.y <= staffYIdx.get(3) ? 1 : 9
+            ;
+
+            int note = cNotes[cNotePosIdx];
+            int oct = (cNotes[0] != 4) ? 4 : 2;
+            notesArr.add(new Expression.Note(note, 0, oct, dur, 100, c.x));
+            // System.out.println(c.y + note + oct + (c.onLine ? " onLine" :""));
 
         }
     }
 
-    private boolean isInCluster(BufferedImage i, int x, int y) { return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); }
+    private boolean isInCluster(BufferedImage i, int x, int y) { 
+        return i.getRGB(x, y) != -1 && !this.igY.contains(y) && !this.igX.contains(x); 
+    }
 
     private BufferedImage enboxCluster(BufferedImage i) {
         BufferedImage markedImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -146,17 +215,22 @@ public class MusicSheet {
         // for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         g.setColor(Color.GREEN);
         for (Cluster cluster : this.headClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
-        g.dispose(); return markedImg;
+        g.dispose(); 
+        return markedImg;
     }
 
-    public static BufferedImage generate(BufferedImage img, ArrayList<Expression.Note> notesArr) {
+    public static BufferedImage generate(BufferedImage img, ArrayList<Expression.Note> notesArr, int currClef) {
+
+        notesArr.clear();
 
         int imgW = img.getWidth(), imgH = img.getHeight();
         System.out.println("\nImage recived: " + imgW + "x" + imgH);
         
-        BufferedImage iBin = MusicSheet.getBwImg(img); // BW of img
+        BufferedImage iBin = MusicSheet.getBwImg(img); // B/W
         
         MusicSheet sheet = new MusicSheet();
+        sheet.cNotes = (currClef != 0) ? sheet.gClef : sheet.fClef;
+        // sheet.cNoteOct = (currClef == 0) ? sheet.gOct : sheet.fOct;
 
         sheet.getSheetLinesCoords(iBin);
 
@@ -165,10 +239,10 @@ public class MusicSheet {
         sheet.nBars = sheet.barXIdx.size();
         sheet.x = sheet.barXIdx.get(0);
         int staffTop = sheet.staffYIdx.get(0), staffBottom = sheet.staffYIdx.get(4);
-        int staffSpacing = Math.max(1, (staffBottom - staffTop) / 4), YMargin = staffSpacing * 3;
-        sheet.y = Math.max(0, staffTop - YMargin);
+        int staffSpacing = Math.max(1, (staffBottom - staffTop) / 4), my = staffSpacing * 3;
+        sheet.y = Math.max(0, staffTop - my);
         sheet.w = sheet.barXIdx.get(sheet.nBars -1) - sheet.x;
-        sheet.h = Math.min(imgH - sheet.y, staffBottom - staffTop + YMargin * 2 + 1);
+        sheet.h = Math.min(imgH - sheet.y, staffBottom - staffTop + my * 2 + 1);
         sheet.getClusters(iBin);
         sheet.filterHeads(notesArr);
 

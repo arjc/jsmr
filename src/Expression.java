@@ -1,26 +1,35 @@
 import java.util.ArrayList;
+import java.util.function.Consumer;
 import javax.sound.midi.*;
 
 public class Expression {
     public static class Note {
-        int off, oct, dur, mod, vel;
+        int off, oct, dur, mod, vel, x;
         public Note(int off, int mod, int oct, int dur, int vel) {
+            this(off, mod, oct, dur, vel, -1);
+        }
+        public Note(int off, int mod, int oct, int dur, int vel, int x) {
             this.off = off; this.mod = mod; this.oct = oct; 
             // (0,  0, 3, dur, vel) [CN3 or C3] 
             // (0,  1, 3, dur, vel) [C#3 or Db3]
-            // (0, -1, 3, dur, vel) [Cb3 or B2]
-            this.dur = dur; this.vel = vel;
+            // (0, -1, 3, dur, vel) [Cb3 or B2 (BN2)]
+            this.dur = dur; this.vel = vel; 
             // (0,  0, 0, dur, 000) [Rest representation]
             // vel = 100 is used with all notes and vel = 0 is taken as rests
+            this.x = x; // For playerHead
         }
     }
     public static void play(ArrayList<Note> noteArr, int instrument) {
+        play(noteArr, instrument, n -> {});
+    }
+    public static void play(ArrayList<Note> noteArr, int instrument, Consumer<Note> onNote) {
         try {
             Synthesizer synth = MidiSystem.getSynthesizer();
             synth.open();
             MidiChannel channel = synth.getChannels()[0];
             channel.programChange(instrument);
             for (Note n : noteArr) {
+                onNote.accept(n);
                 channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
                 Thread.sleep(2000 / n.dur);
                 channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
