@@ -1,8 +1,11 @@
 import java.util.ArrayList;
-import java.util.function.Consumer;
 import javax.sound.midi.*;
 
 public class Expression {
+    public interface NoteListener {
+        void onNotePlayed(Note note);
+    }
+
     public static class Note {
         int off, oct, dur, mod, vel, x;
         public Note(int off, int mod, int oct, int dur, int vel) {
@@ -20,16 +23,19 @@ public class Expression {
         }
     }
     public static void play(ArrayList<Note> noteArr, int instrument) {
-        play(noteArr, instrument, n -> {});
+        System.out.println("\nPlaying Sheet Music...");
+        play(noteArr, instrument, note -> {});
     }
-    public static void play(ArrayList<Note> noteArr, int instrument, Consumer<Note> onNote) {
+
+    public static void play(ArrayList<Note> noteArr, int instrument, NoteListener listener) {
+        System.out.println("\nPlaying Sheet Music...");
         try {
             Synthesizer synth = MidiSystem.getSynthesizer();
             synth.open();
             MidiChannel channel = synth.getChannels()[0];
             channel.programChange(instrument);
             for (Note n : noteArr) {
-                onNote.accept(n);
+                listener.onNotePlayed(n);
                 channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
                 Thread.sleep(2000 / n.dur);
                 channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
@@ -38,8 +44,9 @@ public class Expression {
             Thread.sleep(5000);
             channel.allNotesOff();
             synth.close();
+
         } catch (Exception e) {
-            System.out.println("\nSheet music player is halted. Err: " + e);
+            System.out.println("\nSheet music player is halted.");
         }
     }
 

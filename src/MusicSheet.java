@@ -4,22 +4,28 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
     
 public class MusicSheet {
+    // C C# D D# E F F# G G# A A# Cb
+    // 0 01 2 03 4 5 06 7 08 9 10 11
+    // int[] gClef = {11 - 12, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
+    private static final int[] G_CLEF = {0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
+    private static final int[] F_CLEF = {2, 4, 5, 7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 11};
+    private final int[] cNotes;
+    private int x, y, h, w, nBars;
 
-    int[] gClef = {4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
-    int[] fClef = {7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 11};
-    int x, y, h, w, nBars; 
-    int[] cNotes, cNoteOct, ts;
+    private final List<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>(), igX = new ArrayList<>(), igY = new ArrayList<>();
+    private final List<Cluster> allClusters = new ArrayList<>(), headClusters = new ArrayList<>();
 
-    ArrayList<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>(), igX = new ArrayList<>(), igY = new ArrayList<>();
-    ArrayList<Cluster> allClusters = new ArrayList<>(), headClusters = new ArrayList<>();
+    private MusicSheet(int currClef) {
+        this.cNotes = currClef == 0 ? F_CLEF.clone() : G_CLEF.clone();
+    }
     
     public static class Cluster {
-        int x, y, h, w, nBlack;
-        Cluster nextC;
-        boolean onLine;
+        private final int x, y, h, w, nBlack;
+        private boolean onLine;
         /*
         All clusters is enclosed in a rectangle have a starting coordinate x and y, 
         The cluster enclosing rectangle is then drawn 
@@ -27,14 +33,22 @@ public class MusicSheet {
         nBlack is the total black pixels inside the cluster 
         used for claculating density of the cluster
         */
-       Cluster(int x, int y, int w, int h, int nBlack) {
+        public Cluster(int x, int y, int w, int h, int nBlack) {
            this.x = x; this.y = y; this.w = w; this.h = h; this.nBlack = nBlack;
         }
+        public int getX() { return x; }
+        public int getY() { return y; }
+        public int getWidth() { return w; }
+        public int getHeight() { return h; }
+        public int getBlackPixelCount() { return nBlack; }
+        public boolean isOnLine() { return onLine; }
+        private void markOnLine() { onLine = true; }
         // private int getConc() { return this.nBlack / (this.w * this.h); }
     }
     
     public class Meashure {
-        int x, y, w, h; ArrayList<Cluster> allNoteHeads = new ArrayList<>();
+        private int x, y, w, h; private final List<Cluster> allNoteHeads = new ArrayList<>();
+        public List<Cluster> getAllNoteHeads() { return new ArrayList<>(allNoteHeads); }
         // private int getNumberOfNotes() { return this.allNoteHeads.size(); }
         // private ArrayList<int[]> getNoteDiff() {
         //     for (Cluster c : this.allNoteHeads) {
@@ -58,6 +72,10 @@ public class MusicSheet {
     }
     
     private void getSheetLinesCoords(BufferedImage i) {
+        barXIdx.clear();
+        staffYIdx.clear();
+        igX.clear();
+        igY.clear();
         int w = i.getWidth(), h = i.getHeight(), temp = 0;
         /*
             The positional first incance of pixel column or row of 
@@ -103,7 +121,7 @@ public class MusicSheet {
         } 
     }
 
-    public void getClusters(BufferedImage i) {
+    private void getClusters(BufferedImage i) {
         int imgW = i.getWidth(), imgH = i.getHeight();
         int minX = Math.max(0, this.x), minY = Math.max(0, this.y);
         int maxX = Math.min(imgW, this.x + this.w), maxY = Math.min(imgH, this.y + this.h);
@@ -131,21 +149,23 @@ public class MusicSheet {
         }
     }
 
-    public void filterHeads(ArrayList<Expression.Note> notesArr){
+    private void filterOnlyHeads(List<Expression.Note> notesArr){
         int headH = this.staffYIdx.get(3) - this.staffYIdx.get(2);
-        double headW = headH * 1.5;
+        double headW = headH * 1.75;
         this.allClusters.sort(Comparator.comparingInt(n -> n.x));
         this.headClusters.clear();
 
         for (Cluster c : this.allClusters) 
-            if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) this.headClusters.add(c);
+            if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) 
+                this.headClusters.add(c);
 
         for (int i = 1; i < this.headClusters.size();) {
             Cluster c = this.headClusters.get(i - 1), n = this.headClusters.get(i);
             boolean onLineHead = c.x <= n.x + n.w && n.x <= c.x + c.w;
             if (onLineHead && c.y != n.y) {
-                Cluster abvLn = (c.y < n.y) ? c : n, blwLn = (abvLn == c) ? n : c;
-                abvLn.onLine = true;
+                Cluster abvLn = (c.y < n.y) ? c : n;
+                Cluster blwLn = (abvLn == c) ? n : c;
+                abvLn.markOnLine();
                 this.headClusters.remove(blwLn);
                 if (blwLn == c && i > 1) i--;
             } else i++;
@@ -184,16 +204,29 @@ public class MusicSheet {
             //             }
                         
             // int note = cNotes[noteIndex];
-            int cNotePosIdx = (c.onLine) ?
-                c.y <= staffYIdx.get(0) ? 6 :
-                c.y <= staffYIdx.get(1) ? 4 :
-                c.y <= staffYIdx.get(2) ? 2 :
-                c.y <= staffYIdx.get(3) ? 0 : 8
-            :
-                c.y <= staffYIdx.get(0) ? 7 :
-                c.y <= staffYIdx.get(1) ? 5 :
-                c.y <= staffYIdx.get(2) ? 3 :
-                c.y <= staffYIdx.get(3) ? 1 : 9
+
+            // int cNotePosIdx = (c.onLine) ?
+            //     c.y <= staffYIdx.get(0) ? 6 :
+            //     c.y <= staffYIdx.get(1) ? 4 :
+            //     c.y <= staffYIdx.get(2) ? 2 :
+            //     c.y <= staffYIdx.get(3) ? 0 : 8
+            // :
+            //     c.y <= staffYIdx.get(0) ? 7 :
+            //     c.y <= staffYIdx.get(1) ? 5 :
+            //     c.y <= staffYIdx.get(2) ? 3 :
+            //     c.y <= staffYIdx.get(3) ? 1 : 9
+            // ;
+            
+            int cNotePosIdx = (!c.onLine) ?
+                c.y <= staffYIdx.get(0) ? 9 :
+                c.y <= staffYIdx.get(1) ? 7 :
+                c.y <= staffYIdx.get(2) ? 5 :
+                c.y <= staffYIdx.get(3) ? 3 : 1
+                :
+                c.y <= staffYIdx.get(0) ? 8 :
+                c.y <= staffYIdx.get(1) ? 6 :
+                c.y <= staffYIdx.get(2) ? 4 :
+                c.y <= staffYIdx.get(3) ? 2 : 0
             ;
 
             int note = cNotes[cNotePosIdx];
@@ -221,6 +254,9 @@ public class MusicSheet {
 
     public static BufferedImage generate(BufferedImage img, ArrayList<Expression.Note> notesArr, int currClef) {
 
+        if (img == null || notesArr == null) {
+            throw new IllegalArgumentException("Image and note list are required.");
+        }
         notesArr.clear();
 
         int imgW = img.getWidth(), imgH = img.getHeight();
@@ -228,8 +264,7 @@ public class MusicSheet {
         
         BufferedImage iBin = MusicSheet.getBwImg(img); // B/W
         
-        MusicSheet sheet = new MusicSheet();
-        sheet.cNotes = (currClef != 0) ? sheet.gClef : sheet.fClef;
+        MusicSheet sheet = new MusicSheet(currClef);
         // sheet.cNoteOct = (currClef == 0) ? sheet.gOct : sheet.fOct;
 
         sheet.getSheetLinesCoords(iBin);
@@ -244,31 +279,8 @@ public class MusicSheet {
         sheet.w = sheet.barXIdx.get(sheet.nBars -1) - sheet.x;
         sheet.h = Math.min(imgH - sheet.y, staffBottom - staffTop + my * 2 + 1);
         sheet.getClusters(iBin);
-        sheet.filterHeads(notesArr);
+        sheet.filterOnlyHeads(notesArr);
 
-        /*
-            meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
-            Height of all note heads = 1 gap height.
-            This is an Optimised version of the mean formula. 
-            Derived by Alwin Rajesh (https://github.com/aalwinrajesh001-a11y)
-        */        
-        // int meanHeadHeight = (staffXIdx.get(4) - staffXIdx.get(0)) / 5;
-        // int barLineHeight = staffXIdx.get(0) - staffXIdx.get(4);
-
-        // Graphics2D gr = iBin.createGraphics();
-        // gr.setColor(Color.RED);
-        // gr.setStroke(new BasicStroke(2));
-        
-        // int topY = Math.max(0, staffXIdx.get(0) - meanHeadHeight);
-        // int boxHeight = barHeight + meanHeadHeight * 2;
-
-        // for (int x : barLineXIndices) {
-        //     int boxWidth = Math.max(2, meanHeadHeight / 2);
-        //     int x0 = Math.max(0, x - boxWidth / 2);
-        //     gr.drawRect(x0, topY, boxWidth, boxHeight);
-        // }
-
-        // gr.dispose();
         
         return sheet.enboxCluster(iBin);
     }
@@ -276,8 +288,31 @@ public class MusicSheet {
 }
     
 
+/*
+    meanHeadHeight is the mean of differences of the line position which is the height of 1 gap.
+    Height of all note heads = 1 gap height.
+    This is an Optimised version of the mean formula. 
+    Derived by Alwin Rajesh (https://github.com/aalwinrajesh001-a11y)
+*/        
+// int meanHeadHeight = (staffXIdx.get(4) - staffXIdx.get(0)) / 5;
+// int barLineHeight = staffXIdx.get(0) - staffXIdx.get(4);
+
+// Graphics2D gr = iBin.createGraphics();
+// gr.setColor(Color.RED);
+// gr.setStroke(new BasicStroke(2));
+
+// int topY = Math.max(0, staffXIdx.get(0) - meanHeadHeight);
+// int boxHeight = barHeight + meanHeadHeight * 2;
+
+// for (int x : barLineXIndices) {
+//     int boxWidth = Math.max(2, meanHeadHeight / 2);
+//     int x0 = Math.max(0, x - boxWidth / 2);
+//     gr.drawRect(x0, topY, boxWidth, boxHeight);
+// }
+
+// gr.dispose();
     
-    // === Global pre public methods ===
+// === Global pre public methods ===
 
 
     // private static ArrayList<Cluster> performBFS(BufferedImage i, int xi, int yi){
