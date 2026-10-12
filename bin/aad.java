@@ -10,17 +10,18 @@ public class aad {
             MidiChannel ch = synth.getChannels()[0];
             ch.programChange(1);
 
-            ch.noteOn(100, 100);
-            Thread.sleep(1000);
-            ch.noteOff(0, 100);
+            int note = 76;
+            ch.noteOn(note, 100);
+            Thread.sleep(2000);
+            ch.noteOff(note);
 
-            ch.noteOn(101, 100);
-            Thread.sleep(1000);
-            ch.noteOff(1, 100);
+            ch.noteOn(note, 100);
+            Thread.sleep(2000);
+            ch.noteOff(note);
 
-            ch.noteOn(102, 100);
-            Thread.sleep(1000);
-            ch.noteOff(2, 100);
+            ch.noteOn(note, 100);
+            Thread.sleep(5000);
+            ch.noteOff(note);
 
             synth.close();
         } catch (Exception e) { System.out.println(e);}

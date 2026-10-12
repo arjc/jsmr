@@ -11,20 +11,34 @@ public class MusicSheet {
     // C C# D D# E F F# G G# A A# Cb
     // 0 01 2 03 4 5 06 7 08 9 10 11
     // int[] gClef = {11 - 12, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
-    private static final int[] G_CLEF = {0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
-    private static final int[] F_CLEF = {2, 4, 5, 7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 11};
+    // private static final int[] F_CLEF = {5, 7, 9, 11, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
+    private static final int[] F_CLEF =
+    {2 - 12, 4 - 12, 5 - 12, 7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 
+        11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12, 9 + 12, 11 + 12};
+    private static final int[] G_CLEF = 
+    {11 - 12, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12, 9 + 12, 11 + 12};
     private final int[] cNotes;
     private int x, y, h, w, nBars;
 
-    private final List<Integer> barXIdx = new ArrayList<>(), staffYIdx = new ArrayList<>(), igX = new ArrayList<>(), igY = new ArrayList<>();
-    private final List<Cluster> allClusters = new ArrayList<>(), headClusters = new ArrayList<>();
+    private final List<Integer> barXIdx = new ArrayList<>(), 
+                                staffYIdx = new ArrayList<>(), 
+                                igX = new ArrayList<>(), 
+                                igY = new ArrayList<>();
+
+    private List<Cluster> allClusters = new ArrayList<>(), 
+                          headClusters = new ArrayList<>(), 
+                          beamClusters = new ArrayList<>(), 
+                          stemClusters = new ArrayList<>();
 
     private MusicSheet(int currClef) {
-        this.cNotes = currClef == 0 ? F_CLEF.clone() : G_CLEF.clone();
+        this.cNotes = currClef == 0 ? 
+            G_CLEF.clone() 
+            : F_CLEF.clone();
     }
     
     public static class Cluster {
-        private final int x, y, h, w, nBlack;
+        private final int x, y, h, w;
+        private int nBlack;
         private boolean onLine;
         /*
         All clusters is enclosed in a rectangle have a starting coordinate x and y, 
@@ -34,8 +48,14 @@ public class MusicSheet {
         used for claculating density of the cluster
         */
         public Cluster(int x, int y, int w, int h, int nBlack) {
-           this.x = x; this.y = y; this.w = w; this.h = h; this.nBlack = nBlack;
+           this.x = x; 
+           this.y = y; 
+           this.w = w; 
+           this.h = h; 
+           this.nBlack = nBlack;
         }
+
+
         public int getX() { return x; }
         public int getY() { return y; }
         public int getWidth() { return w; }
@@ -46,17 +66,17 @@ public class MusicSheet {
         // private int getConc() { return this.nBlack / (this.w * this.h); }
     }
     
-    public class Meashure {
-        private int x, y, w, h; private final List<Cluster> allNoteHeads = new ArrayList<>();
-        public List<Cluster> getAllNoteHeads() { return new ArrayList<>(allNoteHeads); }
-        // private int getNumberOfNotes() { return this.allNoteHeads.size(); }
-        // private ArrayList<int[]> getNoteDiff() {
-        //     for (Cluster c : this.allNoteHeads) {
-        //         return new ArrayList<>();
-        //     }
-        // }
+    // public class Meashure {
+    //     private int x, y, w, h; private final List<Cluster> allNoteHeads = new ArrayList<>();
+    //     public List<Cluster> getAllNoteHeads() { return new ArrayList<>(allNoteHeads); }
+    //     // private int getNumberOfNotes() { return this.allNoteHeads.size(); }
+    //     // private ArrayList<int[]> getNoteDiff() {
+    //     //     for (Cluster c : this.allNoteHeads) {
+    //     //         return new ArrayList<>();
+    //     //     }
+    //     // }
 
-    }
+    // }
 
     // public class NoteHead {
     //     int noteIdx; // 0 from bottom till 8 for F
@@ -68,7 +88,10 @@ public class MusicSheet {
 
     public static BufferedImage getBwImg(BufferedImage i) {
         BufferedImage binImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
-        Graphics2D g = binImg.createGraphics(); g.drawImage(i, 0, 0, null); g.dispose(); return binImg;
+        Graphics2D g = binImg.createGraphics(); 
+        g.drawImage(i, 0, 0, null); 
+        g.dispose(); 
+        return binImg;
     }
     
     private void getSheetLinesCoords(BufferedImage i) {
@@ -149,84 +172,55 @@ public class MusicSheet {
         }
     }
 
+    
+
     private void filterOnlyHeads(List<Expression.Note> notesArr){
         int headH = this.staffYIdx.get(3) - this.staffYIdx.get(2);
-        double headW = headH * 1.75;
+        double headW = headH * 2;
         this.allClusters.sort(Comparator.comparingInt(n -> n.x));
         this.headClusters.clear();
 
         for (Cluster c : this.allClusters) 
-            if (c.h < headH * 1.3 && c.h > headH * 0.3 && c.w < headW && c.w > headW / 2) 
+            if (c.h < headH * 1.3 && 
+                c.h > headH * 0.2 && 
+                c.w < headW && 
+                c.w > headW / 2
+            ) 
                 this.headClusters.add(c);
+                
+            for (int i = 1; i < this.headClusters.size();) {
+                Cluster c = this.headClusters.get(i - 1), n = this.headClusters.get(i);
+                boolean onLineHead = c.x <= n.x + n.w && n.x <= c.x + c.w;
+                if (onLineHead && c.y != n.y) {
+                    Cluster abvLn = (c.y < n.y) ? c : n;
+                    Cluster blwLn = (abvLn == c) ? n : c;
+                    abvLn.markOnLine();
+                    // abvLn.nBlack = c.w * c.h;
+                    this.headClusters.remove(blwLn);
+                    if (blwLn == c && i > 1) i--;
+                } else i++;
+            }
+            // for (Cluster c : this.allClusters) 
+            //     if (c.nBlack < 0.6 * (c.w * c.h)) this.headClusters.remove(c);
 
-        for (int i = 1; i < this.headClusters.size();) {
-            Cluster c = this.headClusters.get(i - 1), n = this.headClusters.get(i);
-            boolean onLineHead = c.x <= n.x + n.w && n.x <= c.x + c.w;
-            if (onLineHead && c.y != n.y) {
-                Cluster abvLn = (c.y < n.y) ? c : n;
-                Cluster blwLn = (abvLn == c) ? n : c;
-                abvLn.markOnLine();
-                this.headClusters.remove(blwLn);
-                if (blwLn == c && i > 1) i--;
-            } else i++;
-            // Cluster n = this.headClusters.get(i);
-            // if (n.x <= c.x + c.w) {
-            //     // this.headClusters.remove((c.y < n.y) ? n : c);
-            //     n.onLine = true;
-            //     if (c.y < n.y) {
-            //         this.headClusters.remove(n);
-            //     } else {
-            //         this.headClusters.remove(c);
-            //     }
-            // } if (c.x <= n.x + n.w) {
-            //     c.onLine = true;
-            // }
-            // c.onLine = false;
-            // if (c.nextC == null) continue;
-            // if (c.nextC.x <= (c.x + c.w)) {
-            //     c.onLine = true;
-            //     if (c.y < c.nextC.y) this.headClusters.remove(c.nextC);
-            //     if (c.y > c.nextC.y) this.headClusters.remove(c);
-            // }
-        }
         for (Cluster c : headClusters) {
-            int dur = 4;
-            // if (c.onLine) {
-            //     noteIndex = (c.y <= staffYIdx.get(0)) ? 6 :
-            //                 (c.y <= staffYIdx.get(1)) ? 4 :
-            //                 (c.y <= staffYIdx.get(2)) ? 2 :
-            //                 (c.y <= staffYIdx.get(3)) ? 0 : 8;
-            // } else {
-            //     noteIndex = (c.y <= staffYIdx.get(0)) ? 7 :
-            //                 (c.y <= staffYIdx.get(1)) ? 5 :
-            //                 (c.y <= staffYIdx.get(2)) ? 3 :
-            //                 (c.y <= staffYIdx.get(3)) ? 1 : 0;
-            //             }
-                        
-            // int note = cNotes[noteIndex];
-
-            // int cNotePosIdx = (c.onLine) ?
-            //     c.y <= staffYIdx.get(0) ? 6 :
-            //     c.y <= staffYIdx.get(1) ? 4 :
-            //     c.y <= staffYIdx.get(2) ? 2 :
-            //     c.y <= staffYIdx.get(3) ? 0 : 8
-            // :
-            //     c.y <= staffYIdx.get(0) ? 7 :
-            //     c.y <= staffYIdx.get(1) ? 5 :
-            //     c.y <= staffYIdx.get(2) ? 3 :
-            //     c.y <= staffYIdx.get(3) ? 1 : 9
-            // ;
+            System.out.println(c.y);
+            int dur = 1;
+            if (hasStemAttached(c)) dur = 2;
+            if (c.nBlack > 0.5 * (c.w * c.h)) dur = 4;
+            if (hasNearbyBeam(c, 10)) dur = 8;
             
-            int cNotePosIdx = (!c.onLine) ?
-                c.y <= staffYIdx.get(0) ? 9 :
-                c.y <= staffYIdx.get(1) ? 7 :
-                c.y <= staffYIdx.get(2) ? 5 :
-                c.y <= staffYIdx.get(3) ? 3 : 1
+            int cNotePosIdx = (!c.isOnLine()) ?
+                c.y <= staffYIdx.get(0) ? 9 : // on line 4
+                c.y <= staffYIdx.get(1) ? 7 : // on line 3
+                c.y <= staffYIdx.get(2) ? 5 : // on line 2
+                c.y <= staffYIdx.get(3) ? 3 : // on line 1
+                c.y <= staffYIdx.get(4) ? 1 : 0
                 :
-                c.y <= staffYIdx.get(0) ? 8 :
-                c.y <= staffYIdx.get(1) ? 6 :
-                c.y <= staffYIdx.get(2) ? 4 :
-                c.y <= staffYIdx.get(3) ? 2 : 0
+                c.y <= staffYIdx.get(0) ? 8 :   // Space bw third and 4th 
+                c.y <= staffYIdx.get(1) ? 6 :   // Space berween second and 3rd
+                c.y <= staffYIdx.get(2) ? 4 :   // Space between first two line
+                c.y <= staffYIdx.get(3) ? 2 : 0 // Space bw second and third
             ;
 
             int note = cNotes[cNotePosIdx];
@@ -235,6 +229,113 @@ public class MusicSheet {
             // System.out.println(c.y + note + oct + (c.onLine ? " onLine" :""));
 
         }
+    }
+
+    private boolean hasStemAttached(Cluster head) {
+        for (Cluster stem : this.stemClusters) {
+            boolean closeOnLeft = stem.x + stem.w >= head.x - 2 && stem.x <= head.x;
+            boolean closeOnRight = stem.x <= head.x + head.w + 2 && stem.x + stem.w >= head.x;
+            boolean overlapsVertically = stem.y <= head.y + head.h && head.y <= stem.y + stem.h;
+            if ((closeOnLeft || closeOnRight) && overlapsVertically) return true;
+        }
+        return false;
+    }
+
+    private boolean hasNearbyBeam(Cluster head, int maxDistance) {
+        for (Cluster beam : this.beamClusters) {
+            int distance;
+            if (beam.x + beam.w < head.x) {
+                distance = head.x - (beam.x + beam.w);
+            } else if (head.x + head.w < beam.x) {
+                distance = beam.x - (head.x + head.w);
+            } else {
+                distance = 0;
+            }
+            if (distance <= maxDistance) return true;
+        }
+        return false;
+    }
+
+    private void filterOnlyBeams(BufferedImage i) {
+        int gap = Math.max(1, this.staffYIdx.get(3) - this.staffYIdx.get(2));
+        this.beamClusters.clear();
+        int minX = 0, maxX = i.getWidth();
+        int minY = Math.max(0, this.y), maxY = Math.min(i.getHeight(), this.y + this.h);
+        for (int y = minY; y < maxY; y++) {
+            if (this.igY.contains(y)) continue;
+            int start = -1;
+            for (int x = minX; x <= maxX; x++) {
+                boolean black = x < maxX && !this.igX.contains(x) && i.getRGB(x, y) != -1;
+                if (black && start < 0) start = x;
+                if ((!black || x == maxX) && start >= 0) {
+                    int end = black && x == maxX ? x : x - 1;
+                    if (end - start + 1 >= gap * 2)
+                        addBeamCluster(start, y, end - start + 1, 1);
+                    start = -1;
+                }
+            }
+        }
+    }
+
+    private void addBeamCluster(int x, int y, int w, int h) {
+        if (!this.beamClusters.isEmpty()) {
+            Cluster previous = this.beamClusters.get(this.beamClusters.size() - 1);
+            boolean overlaps = x <= previous.x + previous.w && previous.x <= x + w;
+            if (overlaps && y <= previous.y + previous.h + 1) {
+                int right = Math.max(previous.x + previous.w, x + w);
+                int bottom = Math.max(previous.y + previous.h, y + h);
+                this.beamClusters.set(this.beamClusters.size() - 1,
+                    new Cluster(Math.min(previous.x, x), Math.min(previous.y, y),
+                        right - Math.min(previous.x, x), bottom - Math.min(previous.y, y), 0));
+                return;
+            }
+        }
+        this.beamClusters.add(new Cluster(x, y, w, h, w * h));
+    }
+
+    private void filterOnlyStems(BufferedImage i) {
+        int gap = Math.max(1, this.staffYIdx.get(3) - this.staffYIdx.get(2));
+        int minimumHeight = (int) Math.floor(gap * 2.5);
+        // Stems can occur before the first detected barline, so do not use the
+        // measure region used by note-head clustering as the horizontal bound.
+        int minX = 0, maxX = i.getWidth();
+        int minY = Math.max(0, this.y), maxY = Math.min(i.getHeight(), this.y + this.h);
+        this.stemClusters.clear();
+
+        for (int x = minX; x < maxX; x++) {
+            int firstBlackY = -1;
+            int lastBlackY = -1;
+            int blackPixels = 0;
+            for (int y = minY; y < maxY; y++) {
+                if (this.igY.contains(y) || this.igX.contains(x) || i.getRGB(x, y) == -1) continue;
+                if (firstBlackY < 0) firstBlackY = y;
+                lastBlackY = y;
+                blackPixels++;
+            }
+
+            int height = lastBlackY - firstBlackY + 1;
+            if (firstBlackY >= 0 && height > minimumHeight && blackPixels * 2 >= height) {
+                addStemCluster(x, firstBlackY, 1, height);
+            }
+        }
+    }
+
+    private void addStemCluster(int x, int y, int w, int h) {
+        if (!this.stemClusters.isEmpty()) {
+            Cluster previous = this.stemClusters.get(this.stemClusters.size() - 1);
+            boolean touches = x <= previous.x + previous.w + 1;
+            boolean overlapsVertically = y <= previous.y + previous.h && previous.y <= y + h;
+            if (touches && overlapsVertically) {
+                int left = Math.min(previous.x, x);
+                int top = Math.min(previous.y, y);
+                int right = Math.max(previous.x + previous.w, x + w);
+                int bottom = Math.max(previous.y + previous.h, y + h);
+                this.stemClusters.set(this.stemClusters.size() - 1,
+                    new Cluster(left, top, right - left, bottom - top, 0));
+                return;
+            }
+        }
+        this.stemClusters.add(new Cluster(x, y, w, h, w * h));
     }
 
     private boolean isInCluster(BufferedImage i, int x, int y) { 
@@ -246,8 +347,11 @@ public class MusicSheet {
         Graphics2D g = markedImg.createGraphics(); g.drawImage(i, 0, 0, null);
         g.setColor(Color.RED); g.setStroke(new BasicStroke(1));
         // for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
+        for (Cluster cluster : this.stemClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         g.setColor(Color.GREEN);
         for (Cluster cluster : this.headClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
+        g.setColor(Color.BLUE);
+        for (Cluster cluster : this.beamClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         g.dispose(); 
         return markedImg;
     }
@@ -279,10 +383,13 @@ public class MusicSheet {
         sheet.w = sheet.barXIdx.get(sheet.nBars -1) - sheet.x;
         sheet.h = Math.min(imgH - sheet.y, staffBottom - staffTop + my * 2 + 1);
         sheet.getClusters(iBin);
+        sheet.filterOnlyBeams(iBin);
+        sheet.filterOnlyStems(iBin);
         sheet.filterOnlyHeads(notesArr);
 
         
         return sheet.enboxCluster(iBin);
+        // return iBin;
     }
     
 }

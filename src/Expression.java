@@ -2,7 +2,9 @@ import java.util.ArrayList;
 import javax.sound.midi.*;
 
 public class Expression {
-    public interface NoteListener {
+    static int trnsps = 5;
+
+    public interface nposInterface {
         void onNotePlayed(Note note);
     }
 
@@ -22,32 +24,39 @@ public class Expression {
             this.x = x; // For playerHead
         }
     }
-    public static void play(ArrayList<Note> noteArr, int instrument) {
-        System.out.println("\nPlaying Sheet Music...");
-        play(noteArr, instrument, note -> {});
-    }
+    // public static void play(ArrayList<Note> noteArr, int instrument) {
+    //     System.out.println("\nPlaying Sheet Music...");
+    //     play(noteArr, instrument, note -> {});
+    // }
 
-    public static void play(ArrayList<Note> noteArr, int instrument, NoteListener listener) {
+    public static void play(ArrayList<Note> noteArr, int instrument, nposInterface ln) {
         System.out.println("\nPlaying Sheet Music...");
         try {
             Synthesizer synth = MidiSystem.getSynthesizer();
             synth.open();
             MidiChannel channel = synth.getChannels()[0];
             channel.programChange(instrument);
+            
+            String[] nnn = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
             for (Note n : noteArr) {
-                listener.onNotePlayed(n);
-                channel.noteOn(n.off + 12 * (n.oct + 1) + n.mod, n.vel);
+                if (n == null || n.dur <= 0) continue;
+                ln.onNotePlayed(n);
+                // MIDI note numbers use C-1 = 0, so C3 (off = 0, oct = 3) is 48.
+                int nt = ((n.oct + 1) * 12 + n.off + n.mod) + trnsps;
+                if (n.vel <= 0) {
+                    Thread.sleep(2000 / n.dur);
+                    continue;
+                }
+                if (nt < 0 || nt > 127) continue;
+                System.out.println("playing note: " + nnn[Math.floorMod(n.off + 5, nnn.length)]);
+                channel.noteOn(nt, n.vel); 
                 Thread.sleep(2000 / n.dur);
-                channel.noteOff(n.off + 12 * (n.oct + 1) + n.mod);
+                channel.noteOff(nt);
             }
             System.out.println("\nEnd of sheet music.");
-            Thread.sleep(5000);
-            channel.allNotesOff();
-            synth.close();
+            Thread.sleep(5000);channel.allNotesOff();synth.close();
 
-        } catch (Exception e) {
-            System.out.println("\nSheet music player is halted.");
-        }
+        } catch (Exception e) {System.out.println("\nSheet music player is halted.");}
     }
 
 
