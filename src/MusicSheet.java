@@ -13,10 +13,10 @@ public class MusicSheet {
     // int[] gClef = {11 - 12, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
     // private static final int[] F_CLEF = {5, 7, 9, 11, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12};
     private static final int[] F_CLEF =
-    {2 - 12, 4 - 12, 5 - 12, 7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 5, 7, 9, 
-        11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12, 9 + 12, 11 + 12};
+    {2 - 12, 4 - 12, 6 - 12, 7 - 12, 9 - 12, 11 - 12, 0, 2, 4, 6, 7, 9, 
+        11, 0 + 12, 2 + 12, 4 + 12, 6 + 12, 7 + 12, 9 + 12, 11 + 12};
     private static final int[] G_CLEF = 
-    {11 - 12, 0, 2, 4, 5, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 5 + 12, 7 + 12, 9 + 12, 11 + 12};
+    {11 - 12, 0, 2, 4, 6, 7, 9, 11, 0 + 12, 2 + 12, 4 + 12, 6 + 12, 7 + 12, 9 + 12, 11 + 12};
     private final int[] cNotes;
     private int x, y, h, w, nBars;
 
@@ -345,7 +345,8 @@ public class MusicSheet {
     private BufferedImage enboxCluster(BufferedImage i) {
         BufferedImage markedImg = new BufferedImage(i.getWidth(), i.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = markedImg.createGraphics(); g.drawImage(i, 0, 0, null);
-        g.setColor(Color.RED); g.setStroke(new BasicStroke(1));
+        g.setColor(Color.RED); 
+        g.setStroke(new BasicStroke(1));
         // for (Cluster cluster : this.allClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         for (Cluster cluster : this.stemClusters) g.drawRect(cluster.x, cluster.y, cluster.w - 1, cluster.h - 1);
         g.setColor(Color.GREEN);

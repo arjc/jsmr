@@ -21,6 +21,7 @@ public class Main {
             if (i == null) return;
             int x = 10, y = 10, width = getWidth() - 20, height = getHeight() - 20;
             g.drawImage(i, x, y, width, height, null);
+            
             if (playheadX >= 0) { 
                 g.setColor(Color.RED); int lineX = x + playheadX * width / i.getWidth();
                 g.drawLine(lineX, y, lineX, y + height); 
@@ -37,7 +38,8 @@ public class Main {
     public Main() {
         JFrame fr = new JFrame("JSMR - Java Sheet Music Reader"); 
         fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
-        fr.setMinimumSize(new Dimension(1920, 360)); 
+        fr.setMinimumSize(new Dimension(512, 360)); 
+        fr.setSize(new Dimension(1920, 360)); 
         fr.setLocationRelativeTo(null); 
 
         Container mainWrp = fr.getContentPane();
@@ -95,10 +97,7 @@ public class Main {
         playTrd = new Thread( () -> {
             try { 
 
-
-
                 Expression.play(notesArr, instrument, note -> sheetImgCtr.setPlayhead(note.x));
-            
 
 
             } catch (Exception e) {}
